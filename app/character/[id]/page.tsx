@@ -51,7 +51,7 @@ export default function Home() {
       animate="visible"
     >
       <Image
-        src="/bg2.png"
+        src="/bg2.webp"
         alt="background"
         fill
         className="object-cover z-0"

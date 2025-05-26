@@ -41,7 +41,7 @@ export default function Home() {
   return (
     <div className="w-full h-screen relative flex flex-col items-center justify-between">
       <Image 
-        src="/bg.png" 
+        src="/bg.webp" 
         alt="background" 
         fill 
         className="object-cover z-0" 
