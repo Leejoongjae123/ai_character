@@ -11,7 +11,7 @@ export default function Home() {
   const [isKeyboardActive, setIsKeyboardActive] = useState(false);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [countdown, setCountdown] = useState(3);
-  const [showCharacter, setShowCharacter] = useState(false);
+  const [showWhiteCircle, setShowWhiteCircle] = useState(false);
 
   const handleTransform = () => {
     setIsCountingDown(true);
@@ -25,10 +25,10 @@ export default function Home() {
       }, 1000);
       return () => clearTimeout(timer);
     } else if (isCountingDown && countdown === 0) {
-      setShowCharacter(true);
+      setShowWhiteCircle(true);
       setTimeout(() => {
         router.push("/complete");
-      }, 2000); // 캐릭터를 2초간 보여준 후 이동
+      }, 2000); // 하얀 원을 2초간 보여준 후 이동
     }
   }, [isCountingDown, countdown, router]);
 
@@ -97,22 +97,7 @@ export default function Home() {
     }
   };
 
-  const characterVariants = {
-    hidden: { 
-      opacity: 0,
-      scale: 0.8,
-      rotateY: -90
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      rotateY: 0,
-      transition: {
-        duration: 1.2,
-        ease: "easeOut"
-      }
-    }
-  };
+
 
   return (
     <motion.div 
@@ -146,14 +131,14 @@ export default function Home() {
         className="relative w-[1225px] aspect-square"
         variants={itemVariants}
       >
-        {/* 회색 원 */}
+        {/* 회색 원 또는 하얀 원 */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-full h-full bg-[#D9D9D9] rounded-full"></div>
+          <div className={`w-full h-full rounded-full transition-colors duration-1000 ${showWhiteCircle ? 'bg-white' : 'bg-[#D9D9D9]'}`}></div>
         </div>
 
-        {/* 카메라 이미지 또는 카운트다운/캐릭터 */}
+        {/* 카메라 이미지 또는 카운트다운 */}
         <div className="absolute inset-0 flex items-center justify-center">
-          {!isCountingDown && !showCharacter && (
+          {!isCountingDown && !showWhiteCircle && (
             <motion.div
               variants={cameraVariants}
               initial="hidden"
@@ -180,27 +165,6 @@ export default function Home() {
               key={countdown}
             >
               {countdown}
-            </motion.div>
-          )}
-
-          {showCharacter && (
-            <motion.div 
-              className="w-[800px] h-[1200px] bg-[#F5E6D3] border-[8px] border-[#8B4513] rounded-[20px] z-10 flex flex-col"
-              variants={characterVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {/* 상단 캐릭터 이미지 영역 */}
-              <div className="flex-1 flex items-center justify-center p-4">
-                <Image
-                  src="/cha.webp"
-                  alt="character"
-                  width={1000}
-                  height={1000}
-                  className="object-contain"
-                  unoptimized
-                />
-              </div>
             </motion.div>
           )}
         </div>
@@ -269,7 +233,7 @@ export default function Home() {
       >
         <Button
           onClick={handleTransform}
-          disabled={isCountingDown || showCharacter}
+          disabled={isCountingDown || showWhiteCircle}
           className="w-[1523px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20 disabled:opacity-50"
         >
           수군으로 변신하기
