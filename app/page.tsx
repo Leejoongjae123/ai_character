@@ -82,7 +82,7 @@ export default function Home() {
         <motion.div variants={fadeInUp}>
           <Button 
             className="w-[1536px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold hover:bg-[#D4AE40] transition-colors duration-200"
-            
+            onClick={handleClick}
           >
             화면을 눌러주세요
           </Button>
