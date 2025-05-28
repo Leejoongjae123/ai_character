@@ -10,10 +10,12 @@ import {
 } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useButtonSound } from "@/app/components/ButtonSound";
 
 export default function Home() {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
+  const { playSound } = useButtonSound();
 
   const roles = [
     {
@@ -163,7 +165,10 @@ export default function Home() {
           <Button
             onClick={() => {
               if (selectedRole) {
-                router.push(`/character/${selectedRole}`);
+                playSound();
+                setTimeout(() => {
+                  router.push(`/character/${selectedRole}`);
+                }, 300);
               }
             }}
             disabled={!selectedRole}

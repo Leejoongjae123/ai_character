@@ -3,9 +3,22 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import IntroMusic from "@/app/components/IntroMusic";
+import { useButtonSound } from "@/app/components/ButtonSound";
+import { useState } from "react";
 
 export default function Home() {
   const router = useRouter();
+  const { playSound } = useButtonSound();
+
+  const handleButtonClick = () => {
+    // 효과음 재생
+    playSound();
+    
+    // 효과음 재생 후 페이지 이동 (약간의 지연 추가)
+    setTimeout(() => {
+      router.push("/select");
+    }, 300); // 300ms 후 페이지 이동
+  };
 
   return (
     <div className="w-full h-screen relative flex flex-col items-center justify-between">
@@ -65,9 +78,7 @@ export default function Home() {
 
         <div>
           <Button
-            onClick={() => {
-              router.push("/select");
-            }}
+            onClick={handleButtonClick}
             className="w-[1536px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
           >
             수군으로 변신하기

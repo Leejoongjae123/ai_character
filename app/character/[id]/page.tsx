@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { roles } from "@/app/const/role";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { useButtonSound } from "@/app/components/ButtonSound";
 
 export default function Home() {
   const router = useRouter();
   const { id } = useParams();
   const [isMicActive, setIsMicActive] = useState(false);
   const [isKeyboardActive, setIsKeyboardActive] = useState(false);
+  const { playSound } = useButtonSound();
 
   const role = roles.find((role) => role.id === parseInt(id as string));
   console.log(role);
@@ -91,7 +93,10 @@ export default function Home() {
         <div>
           <Button
             onClick={() => {
-              router.push("/camera");
+              playSound();
+              setTimeout(() => {
+                router.push("/camera");
+              }, 300);
             }}
             className="w-[899px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
           >

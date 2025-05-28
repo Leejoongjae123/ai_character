@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useButtonSound } from "@/app/components/ButtonSound";
 
 export default function Home() {
   const router = useRouter();
@@ -11,10 +12,14 @@ export default function Home() {
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [showWhiteCircle, setShowWhiteCircle] = useState(false);
+  const { playSound } = useButtonSound();
 
   const handleTransform = () => {
-    setIsCountingDown(true);
-    setCountdown(3);
+    playSound();
+    setTimeout(() => {
+      setIsCountingDown(true);
+      setCountdown(3);
+    }, 300);
   };
 
   useEffect(() => {
