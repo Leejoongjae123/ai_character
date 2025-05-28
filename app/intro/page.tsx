@@ -2,12 +2,14 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import IntroMusic from "@/app/components/IntroMusic";
 
 export default function Home() {
   const router = useRouter();
 
   return (
     <div className="w-full h-screen relative flex flex-col items-center justify-between">
+      <IntroMusic />
       <Image
         src="/bg2.webp"
         alt="background"

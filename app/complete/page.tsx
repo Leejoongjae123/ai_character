@@ -100,7 +100,7 @@ export default function Home() {
               className="absolute w-[814px] h-[298px] z-30 flex flex-col items-center justify-center bg-[#FFE7BB] rounded-[130px] border-[10px] border-black"
               style={{ 
                 top: '-350px',
-                left: '3%',
+                left: '32.5%',
                 transform: 'translateX(-50%)',
                 fontFamily: "MuseumClassic, serif"
               }}
