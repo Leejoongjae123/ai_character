@@ -40,7 +40,7 @@ export default function Home() {
       </div>
 
       <div 
-        className="flex flex-col items-center justify-center z-30 mb-[100px]" 
+        className="flex flex-col items-center justify-end z-30 " 
         style={{ fontFamily: 'MuseumClassic, serif' }}
       >
         <div>
@@ -53,7 +53,7 @@ export default function Home() {
         </div>
         
         <div 
-          className="text-[48px] text-black drop-shadow-lg mt-[100px] mb-[200px] font-bold"
+          className="text-[48px] text-black drop-shadow-lg mt-[107px] mb-[214px]  font-bold"
         >
           <p className="text-center">얼굴을 인식하여 조선 수군으로 변신합니다.</p>
           <p className="text-center">생성된 이미지는 포토카드로 제작할 수 있습니다.</p>

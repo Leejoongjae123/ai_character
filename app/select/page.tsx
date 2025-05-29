@@ -138,7 +138,7 @@ export default function Home() {
                 selectedRole === role.id
                   ? "border-[#E4BE50] shadow-[0_0_30px_rgba(228,190,80,0.8)]"
                   : "border-[#D2B582]"
-              } rounded-[80px] cursor-pointer transition-all duration-200 hover:bg-transparent bg-transparent flex flex-col overflow-hidden justify-end p-0 gap-0 hover:scale-105 active:scale-98`}
+              } rounded-[80px] cursor-pointer transition-all duration-200 hover:bg-transparent bg-transparent flex flex-col overflow-hidden justify-end p-0 gap-0 hover:scale-101 active:scale-99`}
             >
               {/* 이미지 영역 - 나머지 공간을 모두 차지 */}
 
@@ -161,7 +161,7 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col items-center justify-center z-30 mb-[100px] mt-[145px] animate-fade-in-up">
-        <div className="button-container hover:scale-102 active:scale-98 transition-transform">
+        <div className="button-container hover:scale-101 active:scale-99 transition-transform">
           <Button
             onClick={() => {
               if (selectedRole) {

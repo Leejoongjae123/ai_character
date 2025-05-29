@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GoBack from "./components/goback";
 import BackgroundMusic from "./components/BackgroundMusic";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
       >
         <GoBack />
         <BackgroundMusic />
+        <Toaster />
         <div className="relative">
           {children}
         </div>

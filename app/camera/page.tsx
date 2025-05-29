@@ -1,40 +1,122 @@
-"use client";
+'use client'
+import { Suspense } from "react";
+import Loading from "@/app/loading";
+
+interface PageProps {
+  searchParams: { character?: string };
+}
+
+export default function Page({ searchParams }: PageProps) {
+  const characterId = searchParams.character;
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <CameraClient characterId={characterId} />
+    </Suspense>
+  );
+}
+
+// 클라이언트 컴포넌트 분리
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useButtonSound } from "@/app/components/ButtonSound";
+import { toast } from "sonner";
+import { Slider } from "@/components/ui/slider";
 
-export default function Home() {
+interface CameraClientProps {
+  characterId?: string;
+}
+
+function CameraClient({ characterId }: CameraClientProps) {
   const router = useRouter();
   const [isMicActive, setIsMicActive] = useState(false);
   const [isKeyboardActive, setIsKeyboardActive] = useState(false);
   const [isCountingDown, setIsCountingDown] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(1);
   const [showWhiteCircle, setShowWhiteCircle] = useState(false);
   const { playSound } = useButtonSound();
+  const flashSoundRef = useRef<HTMLAudioElement | null>(null);
+  
+  // 타이밍 조절을 위한 상태 추가
+  const [countdownDelay, setCountdownDelay] = useState(300); // 카운트다운 시작 지연 시간 (밀리초)
+  const [countdownInterval, setCountdownInterval] = useState(1000); // 카운트다운 숫자 간격 (밀리초)
+  const [whiteCircleDelay, setWhiteCircleDelay] = useState(2000); // 하얀 원 표시 후 다음 페이지 이동 지연 (밀리초)
+  const [showSettings, setShowSettings] = useState(false); // 설정 UI 표시 여부
+
+  // 컴포넌트 마운트 시 오디오 객체 생성
+  useEffect(() => {
+    // 오디오 객체를 미리 생성하고 로드
+    flashSoundRef.current = new Audio("/flash.wav");
+    flashSoundRef.current.load(); // 명시적으로 로드
+    
+    // 개발 모드에서 설정 UI 표시를 위한 키보드 이벤트 리스너 추가
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+        setShowSettings(prev => !prev);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      if (flashSoundRef.current) {
+        flashSoundRef.current.pause();
+        flashSoundRef.current = null;
+      }
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const handleTransform = () => {
-    playSound();
+    playSound(); // 버튼 클릭 효과음
+    
+    // flash.wav 재생
+    if (flashSoundRef.current) {
+      flashSoundRef.current.currentTime = 0;
+      const playPromise = flashSoundRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            // 오디오 재생 성공
+            console.log("플래시 효과음 재생 성공");
+          })
+          .catch(err => {
+            // 오디오 재생 실패 시 토스트 메시지로 알림
+            toast("오디오 재생 실패", {
+              description: "오디오 파일을 재생할 수 없습니다",
+              action: {
+                label: "확인",
+                onClick: () => {}
+              }
+            });
+          });
+      }
+    }
+    
+    // countdownDelay 시간 후에 카운트다운 시작
     setTimeout(() => {
       setIsCountingDown(true);
-      setCountdown(3);
-    }, 300);
+      setCountdown(1);
+    }, countdownDelay);
   };
 
   useEffect(() => {
-    if (isCountingDown && countdown > 0) {
+    if (isCountingDown && countdown < 3) {
       const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
+        setCountdown(countdown + 1);
+      }, countdownInterval);
       return () => clearTimeout(timer);
-    } else if (isCountingDown && countdown === 0) {
+    } else if (isCountingDown && countdown === 3) {
       setShowWhiteCircle(true);
       setTimeout(() => {
-        router.push("/complete");
-      }, 2000); // 하얀 원을 2초간 보여준 후 이동
+        router.push(`/complete?character=${characterId}`);
+      }, whiteCircleDelay);
     }
-  }, [isCountingDown, countdown, router]);
+  }, [isCountingDown, countdown, router, countdownInterval, whiteCircleDelay, characterId]);
 
   return (
     <div className="w-full h-screen relative flex flex-col items-center justify-between">
@@ -118,6 +200,61 @@ export default function Home() {
           잘 보이도록 촬영해주세요
         </div>
       </div>
+
+      {/* 카운트다운 싱크 조정을 위한 설정 UI - Ctrl+Shift+S로 토글 */}
+      {showSettings && (
+        <div className="fixed top-4 right-4 bg-white/90 p-6 rounded-lg shadow-lg z-50 text-black w-[400px]">
+          <h3 className="text-lg font-bold mb-4">타이밍 설정</h3>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <label className="font-medium">카운트다운 시작 지연 ({countdownDelay}ms)</label>
+              </div>
+              <Slider 
+                value={[countdownDelay]} 
+                min={0} 
+                max={2000} 
+                step={50}
+                onValueChange={(value: number[]) => setCountdownDelay(value[0])} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <label className="font-medium">카운트다운 간격 ({countdownInterval}ms)</label>
+              </div>
+              <Slider 
+                value={[countdownInterval]} 
+                min={500} 
+                max={2000} 
+                step={50}
+                onValueChange={(value: number[]) => setCountdownInterval(value[0])} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <label className="font-medium">페이지 이동 지연 ({whiteCircleDelay}ms)</label>
+              </div>
+              <Slider 
+                value={[whiteCircleDelay]} 
+                min={500} 
+                max={5000} 
+                step={100}
+                onValueChange={(value: number[]) => setWhiteCircleDelay(value[0])} 
+              />
+            </div>
+          </div>
+          
+          <div className="mt-4 text-xs text-gray-500">
+            Ctrl+Shift+S로 이 설정창을 숨길 수 있습니다
+          </div>
+        </div>
+      )}
+
+      {/* 오디오 요소 직접 추가 */}
+      <audio id="flashSound" src="/flash.wav" preload="auto" />
 
       <div className="flex items-center justify-center z-30 flex-row mb-[358px]">
         <Button
