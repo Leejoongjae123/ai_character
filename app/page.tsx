@@ -53,7 +53,7 @@ export default function Home() {
         </div>
         
         <div 
-          className="w-[930px] h-[136px]text-[48px] text-black drop-shadow-lg mt-[107px] mb-[214px] font-bold"
+          className="w-full h-[136px]text-[48px] text-black drop-shadow-lg mt-[107px] mb-[214px] font-bold"
           style={{ lineHeight: '68px', letterSpacing: '-2%' }}
         >
           <p className="text-center text-[48px]">얼굴을 인식하여 조선 수군으로 변신합니다.</p>
