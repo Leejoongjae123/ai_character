@@ -13,6 +13,13 @@ type KeyProps = {
   subText?: string; // 키 상단에 표시될 작은 텍스트 (Shift 키 등에서 사용)
 };
 
+type KeyItem = {
+  key: string;
+  value: string;
+  width?: number;
+  subText?: string;
+};
+
 const Key: React.FC<KeyProps> = ({ 
   children, 
   className, 
@@ -64,7 +71,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
   };
 
   // 키보드 행 정의
-  const row1 = [
+  const row1: KeyItem[] = [
     { key: '`', subText: '~', value: '`' },
     { key: '1', subText: '!', value: '1' },
     { key: '2', subText: '@', value: '2' },
@@ -81,7 +88,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
     { key: '⌫', value: 'backspace', width: 2 }
   ];
 
-  const row2 = [
+  const row2: KeyItem[] = [
     { key: 'Tab', value: 'tab', width: 1.5 },
     { key: 'Q', value: 'q' },
     { key: 'W', value: 'w' },
@@ -98,7 +105,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
     { key: '\\', subText: '|', value: '\\', width: 1.5 }
   ];
 
-  const row3 = [
+  const row3: KeyItem[] = [
     { key: 'Caps', value: 'capslock', width: 1.75 },
     { key: 'A', value: 'a' },
     { key: 'S', value: 's' },
@@ -114,7 +121,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
     { key: 'Enter', value: 'enter', width: 2.25 }
   ];
 
-  const row4 = [
+  const row4: KeyItem[] = [
     { key: 'Shift', value: 'shift', width: 2.25 },
     { key: 'Z', value: 'z' },
     { key: 'X', value: 'x' },
@@ -129,7 +136,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
     { key: 'Shift', value: 'shift', width: 2.75 }
   ];
 
-  const row5 = [
+  const row5: KeyItem[] = [
     { key: 'Ctrl', value: 'ctrl', width: 1.25 },
     { key: 'Win', value: 'win', width: 1.25 },
     { key: 'Alt', value: 'alt', width: 1.25 },
@@ -139,7 +146,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
     { key: 'Ctrl', value: 'ctrl', width: 1.25 }
   ];
 
-  const row6 = [
+  const row6: KeyItem[] = [
     { key: '←', value: 'left', width: 1 },
     { key: '↑', value: 'up', width: 1 },
     { key: '↓', value: 'down', width: 1 },
@@ -161,9 +168,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
       <div className="grid gap-1.5 bg-transparent">
         {/* 첫 번째 줄 - 숫자 및 특수 문자 */}
         <div className="flex gap-1 justify-center">
-          {row1.map((item) => (
+          {row1.map((item, index) => (
             <Key 
-              key={`${item.key}-${item.value}`} 
+              key={`${item.key}-${item.value}-${index}`} 
               width={item.width} 
               onClick={() => handleKeyPress(item.value)}
               className={
@@ -178,9 +185,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
         {/* 두 번째 줄 */}
         <div className="flex gap-1 justify-center">
-          {row2.map((item) => (
+          {row2.map((item, index) => (
             <Key 
-              key={`${item.key}-${item.value}`} 
+              key={`${item.key}-${item.value}-${index}`} 
               width={item.width} 
               onClick={() => handleKeyPress(item.value)}
               className={
@@ -195,9 +202,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
         {/* 세 번째 줄 */}
         <div className="flex gap-1 justify-center">
-          {row3.map((item) => (
+          {row3.map((item, index) => (
             <Key 
-              key={`${item.key}-${item.value}`} 
+              key={`${item.key}-${item.value}-${index}`} 
               width={item.width} 
               onClick={() => handleKeyPress(item.value)}
               className={
@@ -212,9 +219,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
         {/* 네 번째 줄 */}
         <div className="flex gap-1 justify-center">
-          {row4.map((item) => (
+          {row4.map((item, index) => (
             <Key 
-              key={`${item.key}-${item.value}-${item.width}`} 
+              key={`${item.key}-${item.value}-${index}`} 
               width={item.width} 
               onClick={() => handleKeyPress(item.value)}
               className="bg-gray-50 text-gray-700"
@@ -227,9 +234,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
         {/* 다섯 번째 줄 - 특수 키 및 스페이스바 */}
         <div className="flex gap-1 justify-center">
-          {row5.map((item) => (
+          {row5.map((item, index) => (
             <Key 
-              key={`${item.key}-${item.value}-${item.width}`} 
+              key={`${item.key}-${item.value}-${index}`} 
               width={item.width} 
               onClick={() => handleKeyPress(item.value)}
               className={
@@ -246,12 +253,13 @@ const Keyboard: React.FC<KeyboardProps> = ({
         <div className="flex gap-1 justify-center mt-2">
           <div className="flex-1"></div>
           <div className="flex gap-1">
-            {row6.map((item) => (
+            {row6.map((item, index) => (
               <Key 
-                key={`${item.key}-${item.value}`} 
+                key={`${item.key}-${item.value}-${index}`} 
                 width={item.width} 
                 onClick={() => handleKeyPress(item.value)}
                 className="bg-gray-50 text-gray-700"
+                subText={item.subText}
               >
                 {item.key}
               </Key>

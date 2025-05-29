@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SpeechClient } from '@google-cloud/speech';
+import { google } from '@google-cloud/speech/build/protos/protos';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -18,21 +19,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const speechClient = new SpeechClient();
     
     // 음성 인식 요청 설정
-    const request = {
+    const speechRequest: google.cloud.speech.v1.IRecognizeRequest = {
       audio: {
         content: audioBytes.toString('base64'),
       },
       config: {
-        encoding: 'LINEAR16',
+        encoding: google.cloud.speech.v1.RecognitionConfig.AudioEncoding.LINEAR16,
         sampleRateHertz: 16000,
         languageCode: 'ko-KR',
       },
     };
 
     // 음성 인식 수행
-    const [response] = await speechClient.recognize(request);
+    const [response] = await speechClient.recognize(speechRequest);
     const transcription = response.results
-      ?.map(result => result.alternatives?.[0]?.transcript)
+      ?.map((result: google.cloud.speech.v1.ISpeechRecognitionResult) => result.alternatives?.[0]?.transcript)
       .filter(Boolean)
       .join('\n');
 

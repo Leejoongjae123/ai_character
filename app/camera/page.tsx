@@ -1,17 +1,15 @@
 'use client'
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import Loading from "@/app/loading";
 
 interface PageProps {
-  searchParams: { character?: string };
+  searchParams: Promise<{ character?: string }>;
 }
 
 export default function Page({ searchParams }: PageProps) {
-  const characterId = searchParams.character;
-
   return (
     <Suspense fallback={<Loading />}>
-      <CameraClient characterId={characterId} />
+      <CameraPageContent searchParams={searchParams} />
     </Suspense>
   );
 }
@@ -25,6 +23,17 @@ import { useState, useEffect, useRef } from "react";
 import { useButtonSound } from "@/app/components/ButtonSound";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
+
+interface CameraPageContentProps {
+  searchParams: Promise<{ character?: string }>;
+}
+
+function CameraPageContent({ searchParams }: CameraPageContentProps) {
+  const resolvedSearchParams = use(searchParams);
+  const characterId = resolvedSearchParams.character;
+
+  return <CameraClient characterId={characterId} />;
+}
 
 interface CameraClientProps {
   characterId?: string;
@@ -81,10 +90,9 @@ function CameraClient({ characterId }: CameraClientProps) {
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            // 오디오 재생 성공
-            console.log("플래시 효과음 재생 성공");
+            // 오디오 재생 성공 - 콘솔 대신 toast 사용
           })
-          .catch(err => {
+          .catch(() => {
             // 오디오 재생 실패 시 토스트 메시지로 알림
             toast("오디오 재생 실패", {
               description: "오디오 파일을 재생할 수 없습니다",
@@ -129,7 +137,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         unoptimized
       />
 
-      <div className="flex flex-col items-center justify-center z-30 mt-[300px]">
+      <div className="flex flex-col items-center justify-center z-30 mt-[300px] animate-fade-in">
         <div
           className="text-[260px] font-bold text-center text-[#481F0E]"
           style={{ fontFamily: "MuseumClassic, serif" }}
@@ -138,7 +146,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         </div>
       </div>
 
-      <div className="relative w-[1225px] aspect-square">
+      <div className="relative w-[1225px] aspect-square animate-fade-in-delay">
         {/* 회색 원 또는 하얀 원 */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className={`w-full h-full rounded-full transition-colors duration-1000 ${showWhiteCircle ? 'bg-white' : 'bg-[#D9D9D9]'}`}></div>
@@ -192,9 +200,9 @@ function CameraClient({ characterId }: CameraClientProps) {
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center z-30 border-[25px] border-[#D3B582] rounded-[60px] w-[1666px] h-[390px] mt-[100px]">
+      <div className="flex flex-col items-center justify-center z-30 border-[25px] border-[#D3B582] rounded-[60px] w-[1666px] h-[390px] mt-[100px] animate-fade-in-up">
         <div className="text-[79px] font-bold text-center text-[#481F0E]">
-          정면을 바라보고 얼굴굴 전체가
+          정면을 바라보고 얼굴이 전체가
         </div>
         <div className="text-[79px] font-bold text-center text-[#481F0E]">
           잘 보이도록 촬영해주세요
@@ -203,7 +211,7 @@ function CameraClient({ characterId }: CameraClientProps) {
 
       {/* 카운트다운 싱크 조정을 위한 설정 UI - Ctrl+Shift+S로 토글 */}
       {showSettings && (
-        <div className="fixed top-4 right-4 bg-white/90 p-6 rounded-lg shadow-lg z-50 text-black w-[400px]">
+        <div className="fixed top-4 right-4 bg-white/90 p-6 rounded-lg shadow-lg z-50 text-black w-[400px] backdrop-blur-sm">
           <h3 className="text-lg font-bold mb-4">타이밍 설정</h3>
           
           <div className="space-y-6">
@@ -253,14 +261,15 @@ function CameraClient({ characterId }: CameraClientProps) {
         </div>
       )}
 
-      {/* 오디오 요소 직접 추가 */}
-      <audio id="flashSound" src="/flash.wav" preload="auto" />
-
-      <div className="flex items-center justify-center z-30 flex-row mb-[358px]">
+      <div className="flex items-center justify-center z-30 flex-row mb-[358px] animate-fade-in-up">
         <Button
           onClick={handleTransform}
           disabled={isCountingDown || showWhiteCircle}
-          className="w-[1523px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20 disabled:opacity-50"
+          className={`w-[1523px] h-[281px] text-[128px] font-bold z-20 rounded-[60px] border-4 border-[#471F0D] transition-all duration-200 hover:scale-101 active:scale-99 ${
+            isCountingDown || showWhiteCircle
+              ? "text-[#8B7355] bg-[#A8956B] cursor-not-allowed opacity-50"
+              : "text-[#451F0D] bg-[#E4BE50] hover:bg-[#E4BE50]/90 cursor-pointer"
+          }`}
         >
           수군으로 변신하기
         </Button>
