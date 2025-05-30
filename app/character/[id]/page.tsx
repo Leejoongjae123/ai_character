@@ -190,6 +190,7 @@ export default function Home() {
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isCapsLock, setIsCapsLock] = useState(false);
   const [isKoreanMode, setIsKoreanMode] = useState(true);
+  const [isKeyboardPressed, setIsKeyboardPressed] = useState(false);
   const { playSound } = useButtonSound();
   const { setMuted } = useAudioStore();
   const { 
@@ -282,6 +283,7 @@ export default function Home() {
   const handleKeyboardClick = () => {
     playSound();
     setModalInput(situation);
+    setIsKeyboardPressed(true);
     setIsModalOpen(true);
   };
 
@@ -321,6 +323,7 @@ export default function Home() {
     setSituation(modalInput);
     setShowPromptContent(true);
     setIsModalOpen(false);
+    setIsKeyboardPressed(false);
     toast({
       title: "입력 완료",
       description: "상황이 설정되었습니다.",
@@ -331,6 +334,7 @@ export default function Home() {
   const handleModalCancel = () => {
     setModalInput('');
     setIsModalOpen(false);
+    setIsKeyboardPressed(false);
   };
 
   // 입력완료 버튼 클릭 처리
@@ -442,14 +446,19 @@ export default function Home() {
           </Button>
         </div>
 
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog open={isModalOpen} onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setIsKeyboardPressed(false);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button
               onClick={handleKeyboardClick}
               className="relative w-[387px] h-[281px] p-0 bg-transparent hover:bg-transparent border-none"
             >
               <Image 
-                src="/keyboard.png"
+                src={isKeyboardPressed ? "/keyboard2.png" : "/keyboard.png"}
                 fill 
                 alt="keyboard" 
                 className="object-contain" 
