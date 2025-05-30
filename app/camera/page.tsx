@@ -48,6 +48,14 @@ function CameraClient({ characterId }: CameraClientProps) {
   const [showWhiteCircle, setShowWhiteCircle] = useState(false);
   const { playSound } = useButtonSound();
   const flashSoundRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  
+  // 카메라 디바이스 정보를 위한 상태 추가
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [currentCamera, setCurrentCamera] = useState<MediaDeviceInfo | null>(null);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
   
   // 타이밍 조절을 위한 상태 추가
   const [countdownDelay, setCountdownDelay] = useState(300); // 카운트다운 시작 지연 시간 (밀리초)
@@ -55,11 +63,116 @@ function CameraClient({ characterId }: CameraClientProps) {
   const [whiteCircleDelay, setWhiteCircleDelay] = useState(2000); // 하얀 원 표시 후 다음 페이지 이동 지연 (밀리초)
   const [showSettings, setShowSettings] = useState(false); // 설정 UI 표시 여부
 
-  // 컴포넌트 마운트 시 오디오 객체 생성
+  // 사용 가능한 카메라 디바이스 목록 가져오기
+  const getCameraDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      setAvailableCameras(videoDevices);
+      
+      if (videoDevices.length === 0) {
+        setCameraError('사용 가능한 카메라가 없습니다.');
+        toast("카메라 없음", {
+          description: "연결된 카메라를 찾을 수 없습니다.",
+          action: {
+            label: "확인",
+            onClick: () => {}
+          }
+        });
+      }
+      
+      return videoDevices;
+    } catch (error) {
+      setCameraError('카메라 디바이스 목록을 가져올 수 없습니다.');
+      toast("디바이스 오류", {
+        description: "카메라 디바이스 정보를 가져올 수 없습니다.",
+        action: {
+          label: "확인",
+          onClick: () => {}
+        }
+      });
+      return [];
+    }
+  };
+
+  // 카메라 스트림 시작
+  const startCamera = async (deviceId?: string) => {
+    try {
+      const constraints: MediaStreamConstraints = {
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      };
+
+      // 특정 디바이스 ID가 지정된 경우
+      if (deviceId) {
+        constraints.video = {
+          deviceId: { exact: deviceId },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        };
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      setCameraStream(stream);
+      
+      // 현재 사용 중인 카메라 정보 업데이트
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const settings = videoTrack.getSettings();
+        const currentDevice = availableCameras.find(device => device.deviceId === settings.deviceId);
+        setCurrentCamera(currentDevice || null);
+        setSelectedCameraId(settings.deviceId || '');
+      }
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      
+      setCameraError(null);
+    } catch (error) {
+      setCameraError('카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.');
+      toast("카메라 오류", {
+        description: "카메라에 접근할 수 없습니다. 권한을 확인해주세요.",
+        action: {
+          label: "확인",
+          onClick: () => {}
+        }
+      });
+    }
+  };
+
+  // 카메라 변경
+  const changeCamera = async (deviceId: string) => {
+    stopCamera();
+    await startCamera(deviceId);
+  };
+
+  // 카메라 스트림 정리
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  // 컴포넌트 마운트 시 오디오 객체 생성 및 카메라 시작
   useEffect(() => {
     // 오디오 객체를 미리 생성하고 로드
     flashSoundRef.current = new Audio("/flash.wav");
     flashSoundRef.current.load(); // 명시적으로 로드
+    
+    // 카메라 디바이스 목록 가져오기 및 카메라 시작
+    const initCamera = async () => {
+      const devices = await getCameraDevices();
+      if (devices.length > 0) {
+        await startCamera();
+      }
+    };
+    
+    initCamera();
     
     // 개발 모드에서 설정 UI 표시를 위한 키보드 이벤트 리스너 추가
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,6 +188,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         flashSoundRef.current.pause();
         flashSoundRef.current = null;
       }
+      stopCamera();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
@@ -152,7 +266,25 @@ function CameraClient({ characterId }: CameraClientProps) {
           <div className={`w-full h-full rounded-full transition-colors duration-1000 ${showWhiteCircle ? 'bg-white' : 'bg-[#D9D9D9]'}`}></div>
         </div>
 
-        {/* 카메라 이미지 또는 카운트다운 */}
+        {/* 카메라 영상 */}
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+          {cameraStream && (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover z-5"
+            />
+          )}
+          {cameraError && (
+            <div className="text-red-500 text-center p-4 bg-white/80 rounded-lg">
+              {cameraError}
+            </div>
+          )}
+        </div>
+
+        {/* 기존 카메라 이미지 (10% 투명도) 또는 카운트다운 */}
         <div className="absolute inset-0 flex items-center justify-center">
           {!isCountingDown && !showWhiteCircle && (
             <div className="animate-fade-in">
@@ -161,7 +293,7 @@ function CameraClient({ characterId }: CameraClientProps) {
                 alt="camera"
                 width={441}
                 height={337}
-                className="z-10"
+                className="z-10 opacity-10"
                 unoptimized
               />
             </div>
@@ -211,47 +343,101 @@ function CameraClient({ characterId }: CameraClientProps) {
 
       {/* 카운트다운 싱크 조정을 위한 설정 UI - Ctrl+Shift+S로 토글 */}
       {showSettings && (
-        <div className="fixed top-4 right-4 bg-white/90 p-6 rounded-lg shadow-lg z-50 text-black w-[400px] backdrop-blur-sm">
-          <h3 className="text-lg font-bold mb-4">타이밍 설정</h3>
+        <div className="fixed top-4 right-4 bg-white/90 p-6 rounded-lg shadow-lg z-50 text-black w-[500px] backdrop-blur-sm max-h-[80vh] overflow-y-auto">
+          <h3 className="text-lg font-bold mb-4">카메라 및 타이밍 설정</h3>
           
           <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <label className="font-medium">카운트다운 시작 지연 ({countdownDelay}ms)</label>
+            {/* 카메라 정보 섹션 */}
+            <div className="space-y-3 border-b pb-4">
+              <h4 className="font-semibold text-blue-600">카메라 정보</h4>
+              
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium">현재 카메라:</span>
+                  <div className="mt-1 p-2 bg-gray-100 rounded text-xs">
+                    {currentCamera ? (
+                      <>
+                        <div><strong>이름:</strong> {currentCamera.label || '알 수 없는 카메라'}</div>
+                        <div><strong>ID:</strong> {currentCamera.deviceId}</div>
+                      </>
+                    ) : (
+                      '카메라가 연결되지 않음'
+                    )}
+                  </div>
+                </div>
+                
+                <div className="text-sm">
+                  <span className="font-medium">사용 가능한 카메라 ({availableCameras.length}개):</span>
+                  <div className="mt-1 space-y-1">
+                    {availableCameras.map((camera, index) => (
+                      <div key={camera.deviceId} className="flex items-center space-x-2">
+                        <button
+                          onClick={() => changeCamera(camera.deviceId)}
+                          className={`flex-1 p-2 text-left text-xs rounded border ${
+                            selectedCameraId === camera.deviceId 
+                              ? 'bg-blue-100 border-blue-300' 
+                              : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div><strong>{index + 1}.</strong> {camera.label || `카메라 ${index + 1}`}</div>
+                          <div className="text-gray-500 truncate">{camera.deviceId}</div>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <button
+                  onClick={getCameraDevices}
+                  className="w-full p-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                >
+                  카메라 목록 새로고침
+                </button>
               </div>
-              <Slider 
-                value={[countdownDelay]} 
-                min={0} 
-                max={2000} 
-                step={50}
-                onValueChange={(value: number[]) => setCountdownDelay(value[0])} 
-              />
             </div>
             
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <label className="font-medium">카운트다운 간격 ({countdownInterval}ms)</label>
+            {/* 타이밍 설정 섹션 */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-green-600">타이밍 설정</h4>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <label className="font-medium">카운트다운 시작 지연 ({countdownDelay}ms)</label>
+                </div>
+                <Slider 
+                  value={[countdownDelay]} 
+                  min={0} 
+                  max={2000} 
+                  step={50}
+                  onValueChange={(value: number[]) => setCountdownDelay(value[0])} 
+                />
               </div>
-              <Slider 
-                value={[countdownInterval]} 
-                min={500} 
-                max={2000} 
-                step={50}
-                onValueChange={(value: number[]) => setCountdownInterval(value[0])} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <label className="font-medium">페이지 이동 지연 ({whiteCircleDelay}ms)</label>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <label className="font-medium">카운트다운 간격 ({countdownInterval}ms)</label>
+                </div>
+                <Slider 
+                  value={[countdownInterval]} 
+                  min={500} 
+                  max={2000} 
+                  step={50}
+                  onValueChange={(value: number[]) => setCountdownInterval(value[0])} 
+                />
               </div>
-              <Slider 
-                value={[whiteCircleDelay]} 
-                min={500} 
-                max={5000} 
-                step={100}
-                onValueChange={(value: number[]) => setWhiteCircleDelay(value[0])} 
-              />
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <label className="font-medium">페이지 이동 지연 ({whiteCircleDelay}ms)</label>
+                </div>
+                <Slider 
+                  value={[whiteCircleDelay]} 
+                  min={500} 
+                  max={5000} 
+                  step={100}
+                  onValueChange={(value: number[]) => setWhiteCircleDelay(value[0])} 
+                />
+              </div>
             </div>
           </div>
           
