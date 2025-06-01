@@ -258,65 +258,56 @@ function CompletePageContent() {
             />
           </div>
           
-          <div className="relative w-full h-[290px]">
-            {/* 검정색 윗 테두리를 가진 겹친 div */}
+          <div 
+            className="w-full h-[290px] z-20 bg-[#E4BE50] flex flex-row border-none relative"
+          >
+            {/* 네임택 위 텍스트 */}
             <div 
-              className="absolute top-0 left-0 w-full h-[290px] border-t-[10px] border-black z-25"
-            />
-
-            <div 
-              className="w-full h-[290px] z-20 bg-[#E4BE50] flex flex-row border-none relative"
+              className="absolute w-[814px] h-[298px] z-30 flex flex-col items-center justify-center bg-[#FFE7BB] rounded-[130px] border-[10px] border-black"
+              style={{ 
+                top: '-350px',
+                left: '32.5%',
+                transform: 'translateX(-50%)',
+                fontFamily: "MuseumClassic, serif"
+              }}
             >
-              {/* 네임택 위 텍스트 */}
-              <div 
-                className="absolute w-[814px] h-[298px] z-30 flex flex-col items-center justify-center bg-[#FFE7BB] rounded-[130px] border-[10px] border-black"
-                style={{ 
-                  top: '-350px',
-                  left: '32.5%',
-                  transform: 'translateX(-50%)',
-                  fontFamily: "MuseumClassic, serif"
-                }}
-              >
-                <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
-                  좌수영 수군
-                </p>
-                <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
-                  출전 준비 완료!
-                </p>
-              </div>
-              
-                
-
-              <div
-                className="flex-1 bg-[#E4BE50] flex flex-col items-center justify-center py-[100px] gap-y-0 border-none"
-                style={{ fontFamily: "MuseumClassic, serif" }}
-              >
-                <p className="text-[69px] font-bold text-black leading-[150%] border-none">
-                  {character?.skill1?.name || "지도력"}
-                </p>
-                <p className="text-[134px] font-bold text-black leading-none border-none">
-                  {skill1Value} 
-                </p>
-              </div>
-              
-              {/* 구분선 */}
-              <div className="flex flex-col items-center justify-center bg-[#E4BE50] border-none">
-                <div className="w-[10px] h-[250px] bg-black my-[20px]"></div>
-              </div>
-
-              <div
-                className="flex-1 bg-[#E4BE50] flex flex-col items-center justify-center py-[100px] gap-y-0 border-none"
-                style={{ fontFamily: "MuseumClassic, serif" }}
-              >
-                <p className="text-[69px] font-bold text-black leading-[150%] border-none">
-                  {character?.skill2?.name || "결단력"}
-                </p>
-                <p className="text-[134px] font-bold text-black leading-none border-none">
-                  {skill2Value}
-                </p>
-              </div>
-              <div className="w-[460px]"></div>
+              <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
+                좌수영 수군
+              </p>
+              <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
+                출전 준비 완료!
+              </p>
             </div>
+            
+            <div
+              className="flex-1 bg-[#E4BE50] flex flex-col items-center justify-center py-[100px] gap-y-0 border-none"
+              style={{ fontFamily: "MuseumClassic, serif" }}
+            >
+              <p className="text-[69px] font-bold text-black leading-[150%] border-none">
+                {character?.skill1?.name || "지도력"}
+              </p>
+              <p className="text-[134px] font-bold text-black leading-none border-none">
+                {skill1Value} 
+              </p>
+            </div>
+            
+            {/* 구분선 */}
+            <div className="flex flex-col items-center justify-center bg-[#E4BE50] border-none">
+              <div className="w-[10px] h-[250px] bg-black my-[20px]"></div>
+            </div>
+
+            <div
+              className="flex-1 bg-[#E4BE50] flex flex-col items-center justify-center py-[100px] gap-y-0 border-none"
+              style={{ fontFamily: "MuseumClassic, serif" }}
+            >
+              <p className="text-[69px] font-bold text-black leading-[150%] border-none">
+                {character?.skill2?.name || "결단력"}
+              </p>
+              <p className="text-[134px] font-bold text-black leading-none border-none">
+                {skill2Value}
+              </p>
+            </div>
+            <div className="w-[460px]"></div>
           </div>
         </div>
       </div>
