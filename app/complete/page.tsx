@@ -21,7 +21,10 @@ function CompletePageContent() {
   const [character, setCharacter] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isImageCaptured, setIsImageCaptured] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState("https://www.naver.com"); // 기본 QR 코드 URL
+  const [qrCodeUrl, setQrCodeUrl] = useState(""); // 기본 QR 코드 URL
+  const [needsSecondCapture, setNeedsSecondCapture] = useState(false); // QR 반영 후 재캡처 필요 여부
+  const [isFirstUploadComplete, setIsFirstUploadComplete] = useState(false); // 첫 번째 업로드 완료 여부
+  const [isSecondUploadComplete, setIsSecondUploadComplete] = useState(false); // 두 번째 업로드 완료 여부
   const { playSound } = useButtonSound();
   const searchParams = useSearchParams();
   const characterId = searchParams.get("character");
@@ -62,11 +65,13 @@ function CompletePageContent() {
     }
   }, [characterId]);
 
-  // 이미지 파라미터가 있으면 QR 코드 URL 업데이트
+  // 이미지 파라미터가 있으면 QR 코드 URL 업데이트 및 상태 설정
   useEffect(() => {
     if (imageParam) {
       setQrCodeUrl(imageParam);
       setIsImageCaptured(true);
+      setIsFirstUploadComplete(true);
+      setIsSecondUploadComplete(true); // 이미 완성된 이미지가 있다면 모든 업로드 완료로 간주
     }
   }, [imageParam]);
 
@@ -90,7 +95,18 @@ function CompletePageContent() {
     }
   }, [imageParam, isImageCaptured]);
 
-  // 화면 전체를 이미지로 변환하고 Supabase에 업로드하는 함수
+  // QR 코드가 업데이트된 후 두 번째 캡처 실행
+  useEffect(() => {
+    if (needsSecondCapture && qrCodeUrl && !isLoading) {
+      const timer = setTimeout(() => {
+        captureAndUploadImageSecond();
+      }, 2000); // QR 코드가 완전히 렌더링될 때까지 대기
+      
+      return () => clearTimeout(timer);
+    }
+  }, [needsSecondCapture, qrCodeUrl, isLoading]);
+
+  // 화면 전체를 이미지로 변환하고 Supabase에 업로드하는 함수 (첫 번째 캡처)
   const captureAndUploadImage = async () => {
     try {
       setIsLoading(true);
@@ -149,6 +165,10 @@ function CompletePageContent() {
         
         // 이미지가 캡처되었음을 표시
         setIsImageCaptured(true);
+        setIsFirstUploadComplete(true);
+        
+        // 두 번째 캡처가 필요함을 표시
+        setNeedsSecondCapture(true);
         
         // 성공 토스트 메시지 표시
         toast({
@@ -175,9 +195,166 @@ function CompletePageContent() {
     }
   };
 
+  // QR 코드가 반영된 후 두 번째 캡처 (기존 URL에 덮어쓰기)
+  const captureAndUploadImageSecond = async () => {
+    try {
+      setIsLoading(true);
+      
+      // photo-card 요소만 캡처
+      const targetElement = photoCardRef.current;
+      
+      if (!targetElement) return;
+      
+      // QR 코드가 완전히 렌더링될 때까지 잠시 대기
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // dom-to-image-more를 사용해서 이미지 생성
+      const dataUrl = await domtoimage.toPng(targetElement, {
+        quality: 1.0,
+        bgcolor: '#ffffff',
+        width: 1594,
+        height: 2543,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        }
+      });
+      
+      // dataURL을 Blob으로 변환
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      
+      // 파일 객체 생성
+      const file = new File([blob], 'photo-card.png', { type: 'image/png' });
+      
+      // FormData 생성
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('existingUrl', qrCodeUrl); // 기존 URL을 전달하여 덮어쓰기
+      
+      // API 엔드포인트로 이미지 업로드 요청 (덮어쓰기)
+      const uploadResponse = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await uploadResponse.json();
+      
+      if (result.success) {
+        // 두 번째 캡처 완료
+        setNeedsSecondCapture(false);
+        setIsSecondUploadComplete(true);
+        
+        // 성공 토스트 메시지 표시
+        toast({
+          title: "QR 반영 완료",
+          description: "QR 코드가 반영된 최종 이미지가 저장되었습니다.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "QR 반영 실패",
+          description: result.error || "QR 코드 반영 중 오류가 발생했습니다.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "QR 반영 실패",
+        description: "QR 코드 반영 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 프린트 기능 추가
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "프린트 실패",
+        description: "팝업이 차단되어 프린트 창을 열 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!qrCodeUrl) {
+      toast({
+        title: "프린트 실패",
+        description: "프린트할 이미지를 찾을 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 50x90mm 사이즈로 프린트용 HTML 생성
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>포토카드 출력</title>
+          <style>
+            @page {
+              size: 50mm 90mm;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              width: 50mm;
+              height: 90mm;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              background: white;
+            }
+            .print-container {
+              width: 100%;
+              height: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .photo-card {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-container">
+            <img src="${qrCodeUrl}" alt="포토카드" class="photo-card" />
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // 이미지 로드 완료 후 프린트 실행
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
+
+    toast({
+      title: "프린트 시작",
+      description: "50x90mm 사이즈로 프린트 창이 열렸습니다.",
+      variant: "default",
+    });
+  };
+
   const handleTransform = () => {
     playSound();
-    captureAndUploadImage();
+    handlePrint();
   };
 
   const handleGoHome = () => {
@@ -186,6 +363,9 @@ function CompletePageContent() {
       router.push("/");
     }, 300);
   };
+
+  // 모든 업로드가 완료되었는지 확인
+  const isAllUploadsComplete = isFirstUploadComplete && isSecondUploadComplete;
 
   useEffect(() => {
     if (isCountingDown && countdown > 0) {
@@ -225,7 +405,7 @@ function CompletePageContent() {
 
       <div 
         ref={photoCardRef}
-        className="photo-card w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-between bg-[url('/bg2_cropped.webp')] bg-cover bg-center"
+        className="photo-card w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-between bg-[url('/bg2_cropped.webp')] bg-cover bg-center rounded-[50px]"
       >
         <div
           className="text-[170px] font-bold text-center text-[#481F0E] mt-[60px]"
@@ -324,25 +504,31 @@ function CompletePageContent() {
       <div 
         className="button-container flex items-center justify-center z-30 flex-row mb-[358px] gap-x-24"
       >
-        <div>
-          <Button
-            onClick={handleTransform}
-            disabled={isLoading}
-            className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20 disabled:opacity-50"
-          >
-            {isLoading ? "저장 중..." : "출력하기"}
-          </Button>
-        </div>
-        
-        <div>
-          <Button
-            onClick={handleGoHome}
-            disabled={isLoading}
-            className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20 disabled:opacity-50"
-          >
-            처음으로
-          </Button>
-        </div>
+        {!isAllUploadsComplete ? (
+          <div className="text-[128px] text-[#451F0D] font-bold">
+            이미지 업로드 중...
+          </div>
+        ) : (
+          <>
+            <div>
+              <Button
+                onClick={handleTransform}
+                className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
+              >
+                출력하기
+              </Button>
+            </div>
+            
+            <div>
+              <Button
+                onClick={handleGoHome}
+                className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
+              >
+                처음으로
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
