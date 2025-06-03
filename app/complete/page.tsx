@@ -393,7 +393,7 @@ function CompletePageContent() {
             className="absolute inset-0"
           >
             <img
-              src={character?.detail || ""}
+              src={character?.result || ""}
               alt={character?.title || "role1"}
               
               className="object-contain w-[1348px] h-[2050px]"
