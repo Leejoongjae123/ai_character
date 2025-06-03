@@ -264,7 +264,7 @@ function CompletePageContent() {
           <meta charset="utf-8">
           <style>
             @page {
-              size: 245mm 390mm;
+              size: 245px 390px;
               margin: 0;
               padding: 0;
             }
@@ -290,8 +290,8 @@ function CompletePageContent() {
             }
             
             .print-page {
-              width: 245mm;
-              height: 390mm;
+              width: 245px;
+              height: 390px;
               margin: 0;
               padding: 0;
               display: flex;
@@ -322,8 +322,8 @@ function CompletePageContent() {
             
             .page-info {
               position: absolute;
-              top: 5mm;
-              right: 5mm;
+              top: 5px;
+              right: 5px;
               font-size: 12px;
               color: #666;
               background: rgba(255,255,255,0.9);
@@ -355,8 +355,8 @@ function CompletePageContent() {
               }
               
               .print-page {
-                width: 245mm !important;
-                height: 390mm !important;
+                width: 245px !important;
+                height: 390px !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 page-break-after: always !important;
