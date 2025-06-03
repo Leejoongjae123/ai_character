@@ -244,57 +244,184 @@ function CompletePageContent() {
     }
   };
 
-  // 프린트 기능 추가
+  // 프린트 기능 추가 - 양면 인쇄
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      
       return;
     }
 
     if (!qrCodeUrl) {
-      
       return;
     }
 
-    // 50x90mm 사이즈로 프린트용 HTML 생성
+    // 양면 인쇄용 HTML 생성
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
-          <title>포토카드 출력</title>
+          <title>포토카드 양면 출력</title>
+          <meta charset="utf-8">
           <style>
             @page {
-              size: 50mm 90mm;
-              margin: 0;
-            }
-            body {
+              size: 548px 870px;
               margin: 0;
               padding: 0;
-              width: 50mm;
-              height: 90mm;
-              display: flex;
-              justify-content: center;
-              align-items: center;
+              marks: crop cross;
+            }
+            
+            @page :first {
+              /* 첫 페이지 (앞면) 스타일 */
+            }
+            
+            @page :nth(2) {
+              /* 두 번째 페이지 (뒷면) 스타일 */
+            }
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: 100%;
+              height: 100%;
               background: white;
+              font-family: Arial, sans-serif;
+              overflow: hidden;
             }
-            .print-container {
-              width: 100%;
-              height: 100%;
+            
+            .print-page {
+              width: 548px;
+              height: 870px;
+              margin: 0;
+              padding: 0;
               display: flex;
               justify-content: center;
               align-items: center;
+              page-break-after: always;
+              page-break-inside: avoid;
+              box-sizing: border-box;
+              position: relative;
+              overflow: hidden;
             }
-            .photo-card {
+            
+            .print-page:last-child {
+              page-break-after: auto;
+            }
+            
+            .card-image {
               width: 100%;
               height: 100%;
-              object-fit: contain;
+              margin: 0;
+              padding: 0;
+              object-fit: cover;
+              border: none;
+              outline: none;
+              display: block;
+            }
+            
+            .page-info {
+              position: absolute;
+              top: 2px;
+              right: 2px;
+              font-size: 12px;
+              color: #666;
+              background: rgba(255,255,255,0.8);
+              padding: 2px 6px;
+              border-radius: 3px;
+            }
+            
+            /* 인쇄 시에만 보이는 스타일 */
+            @media print {
+              .page-info {
+                display: none;
+              }
+              
+              * {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              
+              html, body {
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                overflow: hidden;
+              }
+              
+              .print-page {
+                width: 548px !important;
+                height: 870px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              
+              .card-image {
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                object-fit: cover !important;
+              }
+            }
+            
+            /* 화면에서만 보이는 안내 메시지 */
+            @media screen {
+              .print-instruction {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                background: #007bff;
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                font-size: 14px;
+                max-width: 300px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+              }
+              
+              .print-instruction h3 {
+                margin: 0 0 10px 0;
+                font-size: 16px;
+              }
+              
+              .print-instruction ul {
+                margin: 0;
+                padding-left: 20px;
+              }
             }
           </style>
         </head>
         <body>
-          <div class="print-container">
-            <img src="${qrCodeUrl}" alt="포토카드" class="photo-card" />
+          <!-- 인쇄 안내 메시지 (화면에서만 표시) -->
+          <div class="print-instruction">
+            <h3>양면 인쇄 안내</h3>
+            <ul>
+              <li>프린터 설정에서 '양면 인쇄' 또는 '양면 인쇄 - 긴 가장자리로 넘기기'를 선택하세요</li>
+              <li>용지 크기를 '사용자 정의'로 설정하고 548x870px로 설정하세요</li>
+              <li>여백을 0으로 설정하세요</li>
+              <li>페이지 맞춤을 '실제 크기'로 설정하세요</li>
+            </ul>
+          </div>
+          
+          <!-- 앞면 (1페이지) -->
+          <div class="print-page">
+            <div class="page-info">앞면</div>
+            <img src="${qrCodeUrl}" alt="포토카드 앞면" class="card-image" />
+          </div>
+          
+          <!-- 뒷면 (2페이지) -->
+          <div class="print-page">
+            <div class="page-info">뒷면</div>
+            <img src="/back.jpg" alt="포토카드 뒷면" class="card-image" />
           </div>
         </body>
       </html>
@@ -303,15 +430,43 @@ function CompletePageContent() {
     printWindow.document.write(printContent);
     printWindow.document.close();
 
-    // 이미지 로드 완료 후 프린트 실행
+    // 이미지 로드 대기 및 프린트 실행
     printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
+      const images = printWindow.document.querySelectorAll('img');
+      let loadedImages = 0;
+      
+      const checkAllImagesLoaded = () => {
+        loadedImages++;
+        if (loadedImages === images.length) {
+          setTimeout(() => {
+            printWindow.print();
+            // 인쇄 창을 바로 닫지 않고 사용자가 설정할 시간을 줌
+            setTimeout(() => {
+              printWindow.close();
+            }, 3000);
+          }, 500);
+        }
+      };
+      
+      images.forEach(img => {
+        if (img.complete) {
+          checkAllImagesLoaded();
+        } else {
+          img.onload = checkAllImagesLoaded;
+          img.onerror = checkAllImagesLoaded;
+        }
+      });
+      
+      // 이미지가 없는 경우를 대비한 폴백
+      if (images.length === 0) {
+        setTimeout(() => {
+          printWindow.print();
+          setTimeout(() => {
+            printWindow.close();
+          }, 3000);
+        }, 500);
+      }
     };
-
-
   };
 
   const handleTransform = () => {
