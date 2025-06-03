@@ -295,8 +295,8 @@ function CompletePageContent() {
             }
             
             .print-page {
-              width: 250px;
-              height: 395px;
+              width: 245px;
+              height: 390px;
               margin: 0;
               padding: 0;
               display: flex;
@@ -357,8 +357,8 @@ function CompletePageContent() {
               }
               
               .print-page {
-                width: 250px !important;
-                height: 395px !important;
+                width: 245px !important;
+                height: 390px !important;
                 margin: 0 !important;
                 padding: 0 !important;
               }
