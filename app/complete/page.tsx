@@ -401,16 +401,6 @@ function CompletePageContent() {
           </style>
         </head>
         <body>
-          <!-- 인쇄 안내 메시지 (화면에서만 표시) -->
-          <div class="print-instruction">
-            <h3>양면 인쇄 안내</h3>
-            <ul>
-              <li>프린터 설정에서 '양면 인쇄' 또는 '양면 인쇄 - 긴 가장자리로 넘기기'를 선택하세요</li>
-              <li>용지 크기를 '사용자 정의'로 설정하고 548x870px로 설정하세요</li>
-              <li>여백을 0으로 설정하세요</li>
-              <li>페이지 맞춤을 '실제 크기'로 설정하세요</li>
-            </ul>
-          </div>
           
           <!-- 앞면 (1페이지) -->
           <div class="print-page">
