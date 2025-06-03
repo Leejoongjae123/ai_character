@@ -420,7 +420,7 @@ function CompletePageContent() {
                 }}
               >
                 <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
-                  좌수영 수군
+                  경상좌수영 수군
                 </p>
                 <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
                   출전 준비 완료!
