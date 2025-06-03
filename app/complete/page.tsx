@@ -264,7 +264,7 @@ function CompletePageContent() {
           <meta charset="utf-8">
           <style>
             @page {
-              size: 548px 870px;
+              size: 250px 395px;
               margin: 0;
               padding: 0;
               marks: crop cross;
@@ -295,8 +295,8 @@ function CompletePageContent() {
             }
             
             .print-page {
-              width: 548px;
-              height: 870px;
+              width: 250px;
+              height: 395px;
               margin: 0;
               padding: 0;
               display: flex;
@@ -357,8 +357,8 @@ function CompletePageContent() {
               }
               
               .print-page {
-                width: 548px !important;
-                height: 870px !important;
+                width: 250px !important;
+                height: 395px !important;
                 margin: 0 !important;
                 padding: 0 !important;
               }
