@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { compressImage, getFileSizeInMB, isImageFile, CompressionOptions } from '@/utils/imageCompression';
-import { toast } from '@/utils/toast';
+import { toast } from 'sonner';
 
 interface UploadResult {
   success: boolean;

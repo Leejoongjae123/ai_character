@@ -190,7 +190,7 @@ function RoleCard({ role, isSelected, onSelect }: RoleCardProps) {
           isSelected
             ? "border-[#E4BE50] shadow-[0_0_30px_rgba(228,190,80,0.8)]"
             : "border-[#D2B582]"
-        } rounded-[80px] cursor-pointer transition-all duration-200 hover:bg-transparent bg-transparent flex flex-col overflow-hidden justify-end p-0 gap-0 hover:scale-101 active:scale-99 box-border`}
+        } rounded-[80px] cursor-pointer transition-all duration-200 bg-transparent flex flex-col overflow-hidden justify-end p-0 gap-0 box-border`}
         style={{ boxSizing: 'border-box' }}
       >
         {/* 이미지 영역 */}
