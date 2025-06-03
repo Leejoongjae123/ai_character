@@ -264,7 +264,7 @@ function CompletePageContent() {
           <meta charset="utf-8">
           <style>
             @page {
-              size: 245px 388px;
+              size: 245px 386px;
               margin: 0;
               padding: 0;
             }
@@ -291,7 +291,7 @@ function CompletePageContent() {
             
             .print-page {
               width: 245px;
-              height: 388px;
+              height: 386px;
               margin: 0;
               padding: 0;
               display: flex;
@@ -356,7 +356,7 @@ function CompletePageContent() {
               
               .print-page {
                 width: 245px !important;
-                height: 388px !important;
+                height: 386px !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 page-break-after: always !important;
