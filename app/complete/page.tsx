@@ -320,6 +320,10 @@ function CompletePageContent() {
               display: block;
             }
             
+            .card-image.back {
+              transform: scaleY(-1);
+            }
+            
             .page-info {
               position: absolute;
               top: 5px;
@@ -426,7 +430,7 @@ function CompletePageContent() {
             <!-- 두 번째 페이지 (뒷면) -->
             <div class="print-page">
               <div class="page-info">뒷면 - Page 2</div>
-              <img src="/back.jpg" alt="포토카드 뒷면" class="card-image" crossorigin="anonymous" />
+              <img src="/back.jpg" alt="포토카드 뒷면" class="card-image back" crossorigin="anonymous" />
             </div>
           </div>
           
