@@ -264,7 +264,7 @@ function CompletePageContent() {
           <meta charset="utf-8">
           <style>
             @page {
-              size: 250px 395px;
+              size: 245px 390px;
               margin: 0;
               padding: 0;
               marks: crop cross;
