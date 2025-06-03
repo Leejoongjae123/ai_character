@@ -184,26 +184,31 @@ interface RoleCardProps {
 function RoleCard({ role, isSelected, onSelect }: RoleCardProps) {
   return (
     <div className="card-container w-[400px] h-[650px] relative">
-      <Image
-        src={role.image}
-        alt={role.title}
-        fill
-        className="object-cover w-full h-full rounded-[80px]"
-        unoptimized
-      />
       <Card
         onClick={() => onSelect(role.id)}
         className={`w-full h-full relative border-[13px] ${
           isSelected
             ? "border-[#E4BE50] shadow-[0_0_30px_rgba(228,190,80,0.8)]"
             : "border-[#D2B582]"
-        } rounded-[80px] cursor-pointer transition-all duration-200 hover:bg-transparent bg-transparent flex flex-col overflow-hidden justify-end p-0 gap-0 hover:scale-101 active:scale-99`}
+        } rounded-[80px] cursor-pointer transition-all duration-200 hover:bg-transparent bg-transparent flex flex-col overflow-hidden justify-end p-0 gap-0 hover:scale-101 active:scale-99 box-border`}
+        style={{ boxSizing: 'border-box' }}
       >
+        {/* 이미지 영역 */}
+        <div className="flex-1 relative overflow-hidden rounded-t-[67px]">
+          <Image
+            src={role.image}
+            alt={role.title}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
+        
         {/* 네임택 영역 - 122px 고정 높이 */}
         <div
           className={`h-[122px] ${
             isSelected ? "bg-[#E4BE50]" : "bg-[#D2B582]"
-          } flex flex-col items-center justify-center border-[#471F0D] transition-all duration-200`}
+          } flex flex-col items-center justify-center border-[#471F0D] transition-all duration-200 rounded-b-[67px]`}
         >
           <CardTitle
             className="text-[#471F0D] text-[66px] font-bold text-center"

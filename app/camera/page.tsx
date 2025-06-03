@@ -268,19 +268,25 @@ function CameraClient({ characterId }: CameraClientProps) {
   };
 
   useEffect(() => {
-    if (isCountingDown && countdown < 3) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown + 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (isCountingDown && countdown === 3) {
-      // 카운트다운 완료 시 사진 촬영
-      setShowWhiteCircle(true);
-      
-      // 플래시 효과 후 사진 촬영
-      setTimeout(() => {
-        captureAndUploadPhoto();
-      }, 200);
+    if (isCountingDown && countdown <= 3) {
+      if (countdown < 3) {
+        const timer = setTimeout(() => {
+          setCountdown(countdown + 1);
+        }, 1000);
+        return () => clearTimeout(timer);
+      } else if (countdown === 3) {
+        // 카운트다운 3을 충분히 보여준 후 플래시 효과 시작
+        const timer = setTimeout(() => {
+          setShowWhiteCircle(true);
+          
+          // 플래시 효과 후 사진 촬영
+          setTimeout(() => {
+            captureAndUploadPhoto();
+          }, 200);
+        }, 1000); // 3을 1초간 보여준 후 플래시 시작
+        
+        return () => clearTimeout(timer);
+      }
     }
   }, [isCountingDown, countdown]);
 

@@ -171,25 +171,12 @@ function CompletePageContent() {
         setNeedsSecondCapture(true);
         
         // 성공 토스트 메시지 표시
-        toast({
-          title: "이미지 저장 성공",
-          description: "포토카드 이미지가 성공적으로 저장되었습니다.",
-          variant: "default",
-        });
+ 
       } else {
-        toast({
-          title: "이미지 저장 실패",
-          description: result.error || "포토카드 이미지 저장 중 오류가 발생했습니다.",
-          variant: "destructive",
-        });
+        console.log("에러")
       }
     } catch (error) {
       console.log(error);
-      toast({
-        title: "이미지 저장 실패",
-        description: "포토카드 이미지 저장 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
@@ -245,26 +232,13 @@ function CompletePageContent() {
         setNeedsSecondCapture(false);
         setIsSecondUploadComplete(true);
         
-        // 성공 토스트 메시지 표시
-        toast({
-          title: "QR 반영 완료",
-          description: "QR 코드가 반영된 최종 이미지가 저장되었습니다.",
-          variant: "default",
-        });
+        
       } else {
-        toast({
-          title: "QR 반영 실패",
-          description: result.error || "QR 코드 반영 중 오류가 발생했습니다.",
-          variant: "destructive",
-        });
+        console.log("에러")
       }
     } catch (error) {
       console.log(error);
-      toast({
-        title: "QR 반영 실패",
-        description: "QR 코드 반영 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
+      
     } finally {
       setIsLoading(false);
     }
@@ -274,20 +248,12 @@ function CompletePageContent() {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast({
-        title: "프린트 실패",
-        description: "팝업이 차단되어 프린트 창을 열 수 없습니다.",
-        variant: "destructive",
-      });
+      
       return;
     }
 
     if (!qrCodeUrl) {
-      toast({
-        title: "프린트 실패",
-        description: "프린트할 이미지를 찾을 수 없습니다.",
-        variant: "destructive",
-      });
+      
       return;
     }
 
@@ -345,11 +311,7 @@ function CompletePageContent() {
       }, 500);
     };
 
-    toast({
-      title: "프린트 시작",
-      description: "50x90mm 사이즈로 프린트 창이 열렸습니다.",
-      variant: "default",
-    });
+
   };
 
   const handleTransform = () => {
