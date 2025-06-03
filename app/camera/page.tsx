@@ -156,38 +156,20 @@ function CameraClient({ characterId }: CameraClientProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        toast("업로드 실패", {
-          description: result.error || "사진 업로드에 실패했습니다",
-          action: {
-            label: "확인",
-            onClick: () => {}
-          }
-        });
+
         return null;
       }
 
       return result;
     } catch (error) {
-      toast("업로드 오류", {
-        description: "네트워크 오류가 발생했습니다",
-        action: {
-          label: "확인",
-          onClick: () => {}
-        }
-      });
+
       return null;
     }
   };
 
   const captureAndUploadPhoto = async () => {
     if (!videoElementRef.current) {
-      toast("촬영 실패", {
-        description: "비디오를 찾을 수 없습니다",
-        action: {
-          label: "확인",
-          onClick: () => {}
-        }
-      });
+
       return;
     }
 
@@ -208,13 +190,6 @@ function CameraClient({ characterId }: CameraClientProps) {
       const uploadResult = await uploadPhotoToSupabase(photoBlob, fileName);
       
       if (uploadResult) {
-        toast("촬영 완료", {
-          description: "사진이 성공적으로 저장되었습니다",
-          action: {
-            label: "확인",
-            onClick: () => {}
-          }
-        });
         
         // 2초 후 완료 페이지로 이동
         setTimeout(() => {
@@ -222,13 +197,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         }, 2000);
       }
     } catch (error) {
-      toast("촬영 실패", {
-        description: "사진 촬영에 실패했습니다",
-        action: {
-          label: "확인",
-          onClick: () => {}
-        }
-      });
+
     } finally {
       setIsUploading(false);
     }
