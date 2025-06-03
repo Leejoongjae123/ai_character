@@ -289,8 +289,6 @@ export default function Home() {
 
   // 키 입력 처리 (한글 조합 로직 적용)
   const handleKeyPress = (key: string) => {
-    playSound();
-    
     if (key === 'BACKSPACE') {
       setModalInput(prev => prev.slice(0, -1));
     } else if (key === 'SPACE') {
