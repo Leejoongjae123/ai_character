@@ -321,7 +321,7 @@ function CompletePageContent() {
             }
             
             .card-image.back {
-              transform: scaleY(-1);
+              transform: scaleX(-1) scaleY(-1);
             }
             
             .page-info {
