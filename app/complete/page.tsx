@@ -264,18 +264,9 @@ function CompletePageContent() {
           <meta charset="utf-8">
           <style>
             @page {
-              size: 246px 390px;
+              size: 245mm 390mm;
               margin: 0;
               padding: 0;
-              marks: crop cross;
-            }
-            
-            @page :first {
-              /* 첫 페이지 (앞면) 스타일 */
-            }
-            
-            @page :nth(2) {
-              /* 두 번째 페이지 (뒷면) 스타일 */
             }
             
             * {
@@ -291,12 +282,16 @@ function CompletePageContent() {
               height: 100%;
               background: white;
               font-family: Arial, sans-serif;
-              overflow: hidden;
+            }
+            
+            .print-container {
+              width: 100%;
+              height: 100%;
             }
             
             .print-page {
-              width: 246px;
-              height: 390px;
+              width: 245mm;
+              height: 390mm;
               margin: 0;
               padding: 0;
               display: flex;
@@ -307,10 +302,11 @@ function CompletePageContent() {
               box-sizing: border-box;
               position: relative;
               overflow: hidden;
+              background: white;
             }
             
             .print-page:last-child {
-              page-break-after: auto;
+              page-break-after: avoid;
             }
             
             .card-image {
@@ -326,24 +322,20 @@ function CompletePageContent() {
             
             .page-info {
               position: absolute;
-              top: 2px;
-              right: 2px;
+              top: 5mm;
+              right: 5mm;
               font-size: 12px;
               color: #666;
-              background: rgba(255,255,255,0.8);
-              padding: 2px 6px;
-              border-radius: 3px;
+              background: rgba(255,255,255,0.9);
+              padding: 3px 8px;
+              border-radius: 4px;
+              z-index: 10;
             }
             
-            /* 인쇄 시에만 보이는 스타일 */
+            /* 인쇄 시 스타일 */
             @media print {
               .page-info {
-                display: none;
-              }
-              
-              * {
-                margin: 0 !important;
-                padding: 0 !important;
+                display: none !important;
               }
               
               html, body {
@@ -351,16 +343,31 @@ function CompletePageContent() {
                 height: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-                overflow: hidden;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                overflow: visible !important;
+              }
+              
+              .print-container {
+                width: 100% !important;
+                height: auto !important;
               }
               
               .print-page {
-                width: 246px !important;
-                height: 390px !important;
+                width: 245mm !important;
+                height: 390mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+              }
+              
+              .print-page:last-child {
+                page-break-after: auto !important;
               }
               
               .card-image {
@@ -369,6 +376,8 @@ function CompletePageContent() {
                 margin: 0 !important;
                 padding: 0 !important;
                 object-fit: cover !important;
+                max-width: none !important;
+                max-height: none !important;
               }
             }
             
@@ -383,80 +392,106 @@ function CompletePageContent() {
                 padding: 15px;
                 border-radius: 8px;
                 font-size: 14px;
-                max-width: 300px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                max-width: 350px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
                 z-index: 1000;
+                line-height: 1.4;
               }
               
               .print-instruction h3 {
                 margin: 0 0 10px 0;
                 font-size: 16px;
+                font-weight: bold;
               }
               
               .print-instruction ul {
                 margin: 0;
                 padding-left: 20px;
               }
+              
+              .print-instruction li {
+                margin-bottom: 5px;
+              }
             }
           </style>
         </head>
-        <body>
-          
-          <!-- 앞면 (1페이지) -->
-          <div class="print-page">
-            <div class="page-info">앞면</div>
-            <img src="${qrCodeUrl}" alt="포토카드 앞면" class="card-image" />
+        <body>          
+          <div class="print-container">
+            <!-- 첫 번째 페이지 (앞면) -->
+            <div class="print-page">
+              <div class="page-info">앞면 - Page 1</div>
+              <img src="${qrCodeUrl}" alt="포토카드 앞면" class="card-image" crossorigin="anonymous" />
+            </div>
+            
+            <!-- 두 번째 페이지 (뒷면) -->
+            <div class="print-page">
+              <div class="page-info">뒷면 - Page 2</div>
+              <img src="/back.jpg" alt="포토카드 뒷면" class="card-image" crossorigin="anonymous" />
+            </div>
           </div>
           
-          <!-- 뒷면 (2페이지) -->
-          <div class="print-page">
-            <div class="page-info">뒷면</div>
-            <img src="/back.jpg" alt="포토카드 뒷면" class="card-image" />
-          </div>
+          <script>
+            // 모든 이미지가 로드된 후 자동 인쇄 실행
+            let loadedCount = 0;
+            const images = document.querySelectorAll('img');
+            const totalImages = images.length;
+            
+            function checkAllLoaded() {
+              loadedCount++;
+              console.log('이미지 로드됨:', loadedCount + '/' + totalImages);
+              
+              if (loadedCount === totalImages) {
+                console.log('모든 이미지 로드 완료, 인쇄 시작');
+                setTimeout(() => {
+                  window.print();
+                }, 1000);
+              }
+            }
+            
+            images.forEach((img, index) => {
+              if (img.complete && img.naturalHeight !== 0) {
+                console.log('이미지 ' + (index + 1) + ' 이미 로드됨');
+                checkAllLoaded();
+              } else {
+                img.onload = () => {
+                  console.log('이미지 ' + (index + 1) + ' 로드 완료');
+                  checkAllLoaded();
+                };
+                img.onerror = () => {
+                  console.log('이미지 ' + (index + 1) + ' 로드 실패');
+                  checkAllLoaded();
+                };
+              }
+            });
+            
+            // 안전장치: 5초 후에도 인쇄가 시작되지 않으면 강제 실행
+            setTimeout(() => {
+              if (loadedCount < totalImages) {
+                console.log('타임아웃으로 인한 강제 인쇄 실행');
+                window.print();
+              }
+            }, 5000);
+            
+            // 인쇄 창 닫기 이벤트 처리
+            window.addEventListener('afterprint', () => {
+              setTimeout(() => {
+                window.close();
+              }, 1000);
+            });
+            
+            // ESC 키로 창 닫기
+            document.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape') {
+                window.close();
+              }
+            });
+          </script>
         </body>
       </html>
     `;
 
     printWindow.document.write(printContent);
     printWindow.document.close();
-
-    // 이미지 로드 대기 및 프린트 실행
-    printWindow.onload = () => {
-      const images = printWindow.document.querySelectorAll('img');
-      let loadedImages = 0;
-      
-      const checkAllImagesLoaded = () => {
-        loadedImages++;
-        if (loadedImages === images.length) {
-          setTimeout(() => {
-            printWindow.print();
-            // 인쇄 창을 바로 닫지 않고 사용자가 설정할 시간을 줌
-            setTimeout(() => {
-              printWindow.close();
-            }, 3000);
-          }, 500);
-        }
-      };
-      
-      images.forEach(img => {
-        if (img.complete) {
-          checkAllImagesLoaded();
-        } else {
-          img.onload = checkAllImagesLoaded;
-          img.onerror = checkAllImagesLoaded;
-        }
-      });
-      
-      // 이미지가 없는 경우를 대비한 폴백
-      if (images.length === 0) {
-        setTimeout(() => {
-          printWindow.print();
-          setTimeout(() => {
-            printWindow.close();
-          }, 3000);
-        }, 500);
-      }
-    };
   };
 
   const handleTransform = () => {
