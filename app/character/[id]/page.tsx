@@ -465,7 +465,7 @@ export default function Home() {
               />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[95vw] h-[30vh] max-h-[95vh] overflow-hidden bg-[#F5E6D3] border-[#D3B582] border-4">
+          <DialogContent className="sm:max-w-[95vw] h-[39vh] max-h-[95vh] overflow-hidden bg-[#F5E6D3] border-[#D3B582] border-4">
             <DialogHeader>
               <DialogTitle className="text-[120px] font-bold text-[#481F0E] text-center">
                 상황 입력
@@ -494,14 +494,14 @@ export default function Home() {
                     <button
                       key={index}
                       onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[60px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[60px] flex items-center justify-center"
+                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
                     >
                       {key}
                     </button>
                   ))}
                   <button
                     onClick={() => handleKeyPress('BACKSPACE')}
-                    className="w-24 min-h-[60px] bg-[#E74C3C] hover:bg-[#C0392B] border border-[#471F0D] rounded text-white font-bold text-[40px] flex items-center justify-center"
+                    className="w-24 min-h-[78px] bg-[#E74C3C] hover:bg-[#C0392B] border border-[#471F0D] rounded text-white font-bold text-[52px] flex items-center justify-center"
                   >
                     ⌫
                   </button>
@@ -509,14 +509,14 @@ export default function Home() {
 
                 {/* 두 번째 줄 */}
                 <div className="flex gap-1 flex-1">
-                  <button className="w-20 min-h-[60px] bg-[#E4BE50] hover:bg-[#D4AE40] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[30px] flex items-center justify-center">
+                  <button className="w-20 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[39px] flex items-center justify-center">
                     Tab
                   </button>
                   {layout.row2.map((key, index) => (
                     <button
                       key={index}
                       onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[60px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[60px] flex items-center justify-center"
+                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
                     >
                       {key}
                     </button>
@@ -527,7 +527,7 @@ export default function Home() {
                 <div className="flex gap-1 flex-1">
                   <button
                     onClick={() => handleKeyPress('CAPS')}
-                    className={`w-24 min-h-[60px] border border-[#471F0D] rounded font-bold text-[30px] flex items-center justify-center ${
+                    className={`w-24 min-h-[78px] border border-[#471F0D] rounded font-bold text-[39px] flex items-center justify-center ${
                       isCapsLock 
                         ? 'bg-[#C49E30] text-white' 
                         : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
@@ -539,14 +539,14 @@ export default function Home() {
                     <button
                       key={index}
                       onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[60px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[60px] flex items-center justify-center"
+                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
                     >
                       {key}
                     </button>
                   ))}
                   <button
                     onClick={() => handleKeyPress('ENTER')}
-                    className="w-24 min-h-[60px] bg-[#E4BE50] hover:bg-[#D4AE40] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[40px] flex items-center justify-center"
+                    className="w-24 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[52px] flex items-center justify-center"
                   >
                     ⏎
                   </button>
@@ -556,7 +556,7 @@ export default function Home() {
                 <div className="flex gap-1 flex-1">
                   <button
                     onClick={() => handleKeyPress('SHIFT')}
-                    className={`w-28 min-h-[60px] border border-[#471F0D] rounded font-bold text-[30px] flex items-center justify-center ${
+                    className={`w-28 min-h-[78px] border border-[#471F0D] rounded font-bold text-[39px] flex items-center justify-center ${
                       isShiftPressed 
                         ? 'bg-[#C49E30] text-white' 
                         : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
@@ -568,14 +568,14 @@ export default function Home() {
                     <button
                       key={index}
                       onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[60px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[60px] flex items-center justify-center"
+                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
                     >
                       {key}
                     </button>
                   ))}
                   <button
                     onClick={() => handleKeyPress('SHIFT')}
-                    className={`w-28 min-h-[60px] border border-[#471F0D] rounded font-bold text-[30px] flex items-center justify-center ${
+                    className={`w-28 min-h-[78px] border border-[#471F0D] rounded font-bold text-[39px] flex items-center justify-center ${
                       isShiftPressed 
                         ? 'bg-[#C49E30] text-white' 
                         : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
@@ -589,7 +589,7 @@ export default function Home() {
                 <div className="flex gap-1 flex-1">
                   <button
                     onClick={() => handleKeyPress('KOREAN')}
-                    className={`w-24 min-h-[60px] border border-[#471F0D] rounded font-bold text-[40px] flex items-center justify-center ${
+                    className={`w-24 min-h-[78px] border border-[#471F0D] rounded font-bold text-[52px] flex items-center justify-center ${
                       isKoreanMode 
                         ? 'bg-[#C49E30] text-white' 
                         : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
@@ -599,7 +599,7 @@ export default function Home() {
                   </button>
                   <button
                     onClick={() => handleKeyPress('SPACE')}
-                    className="flex-1 min-h-[60px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[40px] flex items-center justify-center"
+                    className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[52px] flex items-center justify-center"
                   >
                     Space
                   </button>
