@@ -523,6 +523,7 @@ function CompletePageContent() {
       router.push("/");
     }, 300);
   };
+  
 
   // 모든 프로세스가 완료되었는지 확인
   const isAllProcessComplete = captureStep === 'complete';
