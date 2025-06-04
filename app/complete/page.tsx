@@ -218,8 +218,10 @@ function CompletePageContent() {
     if (captureStep === 'complete') {
       return;
     }
+    console.log("captureStep:", captureStep);
+    console.log("qrCodeUrl:", qrCodeUrl);
     
-    if (captureStep === 'qr_ready' && qrCodeUrl && isQrReady) {
+    if (captureStep === 'qr_ready' && qrCodeUrl) {
       addDebugInfo(`QR 코드 준비 완료, 이미지 캡처 시작 - isLoading: ${isLoading}`);
       addDebugInfo(`모든 조건 확인 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
       
