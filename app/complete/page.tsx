@@ -24,7 +24,7 @@ function CompletePageContent() {
   const [uploadUrl, setUploadUrl] = useState(""); // presigned 업로드 URL
   const [uploadToken, setUploadToken] = useState(""); // 업로드 토큰
   const [filePath, setFilePath] = useState(""); // 파일 경로 추가
-  const [captureStep, setCaptureStep] = useState<'none' | 'presigned' | 'qr_ready' | 'capturing' | 'uploading' | 'complete'>('none');
+  const [isImageUploadComplete, setIsImageUploadComplete] = useState(false); // 단일 상태로 변경
   const [isQrReady, setIsQrReady] = useState(false); // QR 코드 준비 상태 추가
   const [showQrInCard, setShowQrInCard] = useState(false); // 포토카드에 QR 표시 여부
   const [debugInfo, setDebugInfo] = useState<string[]>([]); // 디버깅 정보
@@ -82,7 +82,7 @@ function CompletePageContent() {
       addDebugInfo(`이미지 파라미터 감지: ${imageParam}`);
       setQrCodeUrl(imageParam);
       setShowQrInCard(true);
-      setCaptureStep('complete');
+      setIsImageUploadComplete(true); // 이미지 파라미터가 있으면 완료 상태로 설정
     }
   }, [imageParam]);
 
@@ -90,7 +90,7 @@ function CompletePageContent() {
   useEffect(() => {
     const autoStart = async () => {
       // 이미 프로세스가 시작되었거나 이미지 파라미터가 있는 경우 실행하지 않음
-      if (captureStep !== 'none' || imageParam) return;
+      if (isImageUploadComplete || imageParam) return;
       
       addDebugInfo('자동 프로세스 시작 준비');
       // 렌더링이 완전히 끝난 후 실행하기 위해 충분한 지연 추가
@@ -103,17 +103,16 @@ function CompletePageContent() {
     };
     
     // DOM이 준비된 후 실행
-    if (photoCardRef.current && captureStep === 'none' && !imageParam) {
+    if (photoCardRef.current && !isImageUploadComplete && !imageParam) {
       autoStart();
     }
-  }, [captureStep, imageParam]);
+  }, [isImageUploadComplete, imageParam]);
 
   // 2단계: 이미지 캡처 및 업로드
   const captureAndUploadImage = useCallback(async () => {
     try {
       addDebugInfo('이미지 캡처 시작');
       setIsLoading(true);
-      setCaptureStep('capturing');
       
       // photo-card 요소만 캡처
       const targetElement = photoCardRef.current;
@@ -142,7 +141,6 @@ function CompletePageContent() {
       });
       
       addDebugInfo('이미지 변환 완료, 업로드 준비');
-      setCaptureStep('uploading');
       
       // dataURL을 Blob으로 변환
       const response = await fetch(dataUrl);
@@ -181,7 +179,7 @@ function CompletePageContent() {
           
           if (uploadResult.success) {
             addDebugInfo('이미지 업로드 성공');
-            setCaptureStep('complete');
+            setIsImageUploadComplete(true); // 업로드 완료 시 true로 설정
             return;
           } else {
             addDebugInfo(`업로드 실패 (시도 ${retryCount + 1}): ${uploadResult.error}`);
@@ -201,12 +199,14 @@ function CompletePageContent() {
       
       if (!uploadResult?.success) {
         addDebugInfo(`모든 업로드 시도 실패 (${maxRetries}회)`);
-        setCaptureStep('qr_ready'); // 실패 시 다시 QR 준비 단계로
+        // 실패해도 일단 완료 상태로 설정 (사용자 경험을 위해)
+        setIsImageUploadComplete(true);
       }
       
     } catch (error) {
       addDebugInfo(`이미지 캡처 및 업로드 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setCaptureStep('qr_ready'); // 실패 시 다시 QR 준비 단계로
+      // 에러가 발생해도 완료 상태로 설정 (사용자 경험을 위해)
+      setIsImageUploadComplete(true);
     } finally {
       setIsLoading(false);
     }
@@ -214,43 +214,30 @@ function CompletePageContent() {
 
   // QR 코드가 준비된 후 이미지 캡처 및 업로드
   useEffect(() => {
-    // captureStep이 complete인 경우 실행하지 않음
-    if (captureStep === 'complete') {
+    // 이미 완료된 경우 실행하지 않음
+    if (isImageUploadComplete) {
       return;
     }
-    console.log("captureStep:", captureStep);
     console.log("qrCodeUrl:", qrCodeUrl);
     
     if (qrCodeUrl) {
       addDebugInfo(`QR 코드 준비 완료, 이미지 캡처 시작 - isLoading: ${isLoading}`);
-      addDebugInfo(`모든 조건 확인 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
-      
       
       captureAndUploadImage();
-      
-      
-      
-    } else if (captureStep !== 'none' && captureStep !== 'presigned' && captureStep !== 'capturing' && captureStep !== 'uploading') {
-      addDebugInfo(`조건 불만족 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
     }
   }, [qrCodeUrl]); // captureAndUploadImage 의존성 제거
 
   // QR 코드 준비 완료 콜백
   const handleQrReady = () => {
     addDebugInfo('QR 코드 렌더링 완료');
-    addDebugInfo(`QR 준비 전 상태 - captureStep: ${captureStep}, isQrReady: ${isQrReady}`);
     setIsQrReady(true);
-    if (captureStep === 'presigned') {
-      addDebugInfo('captureStep을 qr_ready로 변경');
-      setCaptureStep('qr_ready');
-      
-      // 대체 트리거: useEffect가 실행되지 않는 경우를 대비해 직접 호출
+    
+    // 대체 트리거: useEffect가 실행되지 않는 경우를 대비해 직접 호출
+    if (!isImageUploadComplete && qrCodeUrl) {
       setTimeout(() => {
         addDebugInfo('대체 트리거 실행 - 직접 이미지 캡처 호출');
         captureAndUploadImage();
       }, 2000);
-    } else {
-      addDebugInfo(`captureStep이 presigned가 아님: ${captureStep}`);
     }
   };
 
@@ -259,7 +246,6 @@ function CompletePageContent() {
     if (qrCodeUrl) {
       setIsQrReady(false);
       addDebugInfo(`QR 코드 URL 설정: ${qrCodeUrl.substring(0, 50)}...`);
-      addDebugInfo(`QR URL 설정 후 상태 - captureStep: ${captureStep}, isQrReady: false`);
     }
   }, [qrCodeUrl]);
 
@@ -268,7 +254,6 @@ function CompletePageContent() {
     try {
       addDebugInfo('presigned URL 생성 시작');
       setIsLoading(true);
-      setCaptureStep('presigned');
       
       // presigned URL 생성 요청
       const response = await fetch('/api/generate-presigned-url', {
@@ -283,7 +268,6 @@ function CompletePageContent() {
       if (!response.ok) {
         const errorText = await response.text();
         addDebugInfo(`API 응답 에러: ${errorText}`);
-        setCaptureStep('none');
         return;
       }
       
@@ -308,18 +292,50 @@ function CompletePageContent() {
         window.history.replaceState({}, '', url.toString());
         
         addDebugInfo('QR 코드 렌더링 대기 중');
-        addDebugInfo(`현재 상태 - captureStep: ${captureStep}, isLoading: ${isLoading}`);
         
       } else {
         addDebugInfo(`presigned URL 생성 에러: ${result.error}`);
-        setCaptureStep('none');
       }
     } catch (error) {
       addDebugInfo(`presigned URL 생성 네트워크 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setCaptureStep('none');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTransform = () => {
+    playSound();
+    handlePrint();
+  };
+
+  const handleGoHome = () => {
+    playSound();
+    setTimeout(() => {
+      router.push("/");
+    }, 300);
+  };
+  
+
+  // 모든 프로세스가 완료되었는지 확인
+  const isAllProcessComplete = isImageUploadComplete;
+
+  useEffect(() => {
+    if (isCountingDown && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (isCountingDown && countdown === 0) {
+      setShowCharacter(true);
+      setTimeout(() => {
+        router.push("/complete");
+      }, 2000); // 캐릭터를 2초간 보여준 후 이동
+    }
+  }, [isCountingDown, countdown, router]);
+
+  // 디버깅을 위한 상태 표시
+  const getStatusMessage = () => {
+    return isImageUploadComplete ? '완료!' : '이미지 업로드중...';
   };
 
   // 프린트 기능 추가 - 양면 인쇄
@@ -576,56 +592,6 @@ function CompletePageContent() {
     printWindow.document.close();
   };
 
-  const handleTransform = () => {
-    playSound();
-    handlePrint();
-  };
-
-  const handleGoHome = () => {
-    playSound();
-    setTimeout(() => {
-      router.push("/");
-    }, 300);
-  };
-  
-
-  // 모든 프로세스가 완료되었는지 확인
-  const isAllProcessComplete = captureStep === 'complete';
-
-  useEffect(() => {
-    if (isCountingDown && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (isCountingDown && countdown === 0) {
-      setShowCharacter(true);
-      setTimeout(() => {
-        router.push("/complete");
-      }, 2000); // 캐릭터를 2초간 보여준 후 이동
-    }
-  }, [isCountingDown, countdown, router]);
-
-  // 디버깅을 위한 상태 표시
-  const getStatusMessage = () => {
-    switch (captureStep) {
-      case 'none':
-        return '준비 중...';
-      case 'presigned':
-        return 'URL 생성 완료, QR 코드 준비 중...';
-      case 'qr_ready':
-        return 'QR 코드 준비 완료!';
-      case 'capturing':
-        return '이미지 캡처 중...';
-      case 'uploading':
-        return '이미지 업로드 중...';
-      case 'complete':
-        return '완료!';
-      default:
-        return '처리 중...';
-    }
-  };
-
   return (
     <div ref={fullScreenRef} className="w-full h-screen relative flex flex-col items-center justify-between">
       <Image
@@ -758,36 +724,11 @@ function CompletePageContent() {
       <div 
         className="button-container flex items-center justify-center z-30 flex-row mb-[358px] gap-x-24"
       >
-        {!isAllProcessComplete ? (
+        {!isImageUploadComplete ? (
           <div className="flex flex-col items-center gap-4">
             <div className="text-[128px] text-[#451F0D] font-bold">
-              {getStatusMessage()}
+              이미지 업로드중...
             </div>
-            
-            {/* 디버깅 정보 표시 */}
-            {debugInfo.length > 0 && !isAllProcessComplete && (
-              <div className="bg-black/80 text-white p-4 rounded-lg max-w-[1200px] text-[24px] leading-relaxed">
-                <div className="font-bold mb-2">디버깅 정보:</div>
-                {debugInfo.map((info, index) => (
-                  <div key={index} className="mb-1 font-mono text-[20px]">
-                    {info}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {/* QR 코드 준비 완료 후 5초 이상 대기 시 강제 실행 버튼 표시 */}
-            {captureStep === 'qr_ready' && (
-              <Button
-                onClick={() => {
-                  addDebugInfo('강제 실행 버튼 클릭');
-                  captureAndUploadImage();
-                }}
-                className="mt-4 px-8 py-4 text-[32px] bg-red-500 text-white rounded-lg"
-              >
-                강제 실행
-              </Button>
-            )}
           </div>
         ) : (
           <>
