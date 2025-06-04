@@ -20,28 +20,15 @@ function CompletePageContent() {
   const [skill2Value, setSkill2Value] = useState(0);
   const [character, setCharacter] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState(""); // QR 코드에 표시될 URL
-  const [uploadUrl, setUploadUrl] = useState(""); // presigned 업로드 URL
-  const [uploadToken, setUploadToken] = useState(""); // 업로드 토큰
-  const [filePath, setFilePath] = useState(""); // 파일 경로 추가
-  const [captureStep, setCaptureStep] = useState<'none' | 'presigned' | 'qr_ready' | 'capturing' | 'uploading' | 'complete'>('none');
+  const [qrCodeUrl, setQrCodeUrl] = useState(""); // 기본 QR 코드 URL
+  const [captureStep, setCaptureStep] = useState<'none' | 'first' | 'waiting' | 'second' | 'complete'>('none');
   const [isQrReady, setIsQrReady] = useState(false); // QR 코드 준비 상태 추가
-  const [showQrInCard, setShowQrInCard] = useState(false); // 포토카드에 QR 표시 여부
-  const [debugInfo, setDebugInfo] = useState<string[]>([]); // 디버깅 정보
   const { playSound } = useButtonSound();
   const searchParams = useSearchParams();
   const characterId = searchParams.get("character");
   const imageParam = searchParams.get("image");
   const photoCardRef = useRef<HTMLDivElement>(null);
   const fullScreenRef = useRef<HTMLDivElement>(null);
-
-  // 디버깅 정보 추가 함수
-  const addDebugInfo = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    const debugMessage = `[${timestamp}] ${message}`;
-    console.log(debugMessage);
-    setDebugInfo(prev => [...prev.slice(-4), debugMessage]); // 최근 5개만 유지
-  };
 
   // 컴포넌트 마운트 시 역할 정보 및 랜덤 값 생성
   useEffect(() => {
@@ -79,129 +66,71 @@ function CompletePageContent() {
   // 이미지 파라미터가 있으면 QR 코드 URL 업데이트 및 상태 설정
   useEffect(() => {
     if (imageParam) {
-      addDebugInfo(`이미지 파라미터 감지: ${imageParam}`);
       setQrCodeUrl(imageParam);
-      setShowQrInCard(true);
       setCaptureStep('complete');
     }
   }, [imageParam]);
 
-  // 페이지 로드 시 이미지가 아직 캡처되지 않았고 이미지 파라미터도 없는 경우 자동으로 프로세스 시작
+  // 페이지 로드 시 이미지가 아직 캡처되지 않았고 이미지 파라미터도 없는 경우 자동으로 캡처 및 업로드
   useEffect(() => {
-    const autoStart = async () => {
-      // 이미 프로세스가 시작되었거나 이미지 파라미터가 있는 경우 실행하지 않음
+    const autoCapture = async () => {
+      // 이미 캡처가 시작되었거나 이미지 파라미터가 있는 경우 실행하지 않음
       if (captureStep !== 'none' || imageParam) return;
       
-      addDebugInfo('자동 프로세스 시작 준비');
       // 렌더링이 완전히 끝난 후 실행하기 위해 충분한 지연 추가
       const timer = setTimeout(() => {
-        addDebugInfo('자동 프로세스 시작');
-        generatePresignedUrlAndCapture();
-      }, 2000);
+        captureAndUploadImage();
+      }, 3000);
       
       return () => clearTimeout(timer);
     };
     
     // DOM이 준비된 후 실행
     if (photoCardRef.current && captureStep === 'none' && !imageParam) {
-      autoStart();
+      autoCapture();
     }
   }, [captureStep, imageParam]);
 
-  // QR 코드가 준비된 후 이미지 캡처 및 업로드
+  // QR 코드가 업데이트되고 준비된 후 두 번째 캡처 실행
   useEffect(() => {
-    if (captureStep === 'qr_ready' && qrCodeUrl && isQrReady && !isLoading) {
-      addDebugInfo('QR 코드 준비 완료, 이미지 캡처 시작');
+    if (captureStep === 'waiting' && qrCodeUrl && !isLoading && isQrReady) {
+      console.log('QR 코드 준비 완료, 두 번째 캡처 시작:', qrCodeUrl);
       const timer = setTimeout(() => {
-        captureAndUploadImage();
-      }, 1500); // QR 코드가 완전히 렌더링될 때까지 대기
+        captureAndUploadImageSecond();
+      }, 2000); // QR 코드가 완전히 렌더링될 때까지 대기
       
       return () => clearTimeout(timer);
     }
-  }, [captureStep, qrCodeUrl, isQrReady, isLoading]);
+  }, [captureStep, qrCodeUrl, isLoading, isQrReady]);
 
   // QR 코드 준비 완료 콜백
   const handleQrReady = () => {
-    addDebugInfo('QR 코드 렌더링 완료');
+    console.log('QR 코드 렌더링 완료');
     setIsQrReady(true);
-    if (captureStep === 'presigned') {
-      setCaptureStep('qr_ready');
-    }
   };
 
   // QR 코드 URL이 변경될 때 준비 상태 초기화
   useEffect(() => {
     if (qrCodeUrl) {
       setIsQrReady(false);
-      addDebugInfo(`QR 코드 URL 설정: ${qrCodeUrl.substring(0, 50)}...`);
     }
   }, [qrCodeUrl]);
 
-  // 1단계: presigned URL 생성 및 QR 코드 설정
-  const generatePresignedUrlAndCapture = async () => {
-    try {
-      addDebugInfo('presigned URL 생성 시작');
-      setIsLoading(true);
-      setCaptureStep('presigned');
-      
-      // presigned URL 생성 요청
-      const response = await fetch('/api/generate-presigned-url', {
-        method: 'POST',
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        addDebugInfo(`presigned URL 생성 성공: ${result.publicUrl.substring(0, 50)}...`);
-        
-        // 상태 업데이트
-        setQrCodeUrl(result.publicUrl);
-        setUploadUrl(result.uploadUrl);
-        setUploadToken(result.token);
-        setFilePath(result.filePath);
-        setShowQrInCard(true);
-        
-        // URL 파라미터에 이미지 URL 추가
-        const currentUrl = window.location.href;
-        const url = new URL(currentUrl);
-        url.searchParams.set('image', result.publicUrl);
-        
-        // 현재 페이지를 새 URL로 대체
-        window.history.replaceState({}, '', url.toString());
-        
-        addDebugInfo('QR 코드 렌더링 대기 중');
-        
-      } else {
-        addDebugInfo(`presigned URL 생성 에러: ${result.error}`);
-        setCaptureStep('none');
-      }
-    } catch (error) {
-      addDebugInfo(`presigned URL 생성 에러: ${error}`);
-      setCaptureStep('none');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 2단계: 이미지 캡처 및 업로드
+  // 화면 전체를 이미지로 변환하고 Supabase에 업로드하는 함수 (첫 번째 캡처)
   const captureAndUploadImage = async () => {
     try {
-      addDebugInfo('이미지 캡처 시작');
+      console.log('첫 번째 캡처 시작');
       setIsLoading(true);
-      setCaptureStep('capturing');
+      setCaptureStep('first');
       
       // photo-card 요소만 캡처
       const targetElement = photoCardRef.current;
       
-      if (!targetElement) {
-        addDebugInfo('캡처 대상 요소를 찾을 수 없음');
-        return;
-      }
+      if (!targetElement) return;
       
-      // 렌더링이 완전히 끝날 때까지 대기
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // QR 코드가 완전히 렌더링될 때까지 충분히 대기
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      addDebugInfo('DOM to Image 변환 시작');
       // dom-to-image-more를 사용해서 이미지 생성
       const dataUrl = await domtoimage.toPng(targetElement, {
         quality: 1.0,
@@ -216,8 +145,88 @@ function CompletePageContent() {
         cacheBust: true
       });
       
-      addDebugInfo('이미지 변환 완료, 업로드 준비');
-      setCaptureStep('uploading');
+      // dataURL을 Blob으로 변환
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      
+      // 파일 객체 생성
+      const file = new File([blob], 'photo-card.png', { type: 'image/png' });
+      
+      // FormData 생성
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // API 엔드포인트로 이미지 업로드 요청
+      const uploadResponse = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await uploadResponse.json();
+      
+      if (result.success) {
+        console.log('첫 번째 업로드 성공:', result.url);
+        // 업로드 성공 시 QR 코드 URL 업데이트
+        const imageUrl = result.url;
+        setQrCodeUrl(imageUrl);
+        
+        // URL 파라미터에 이미지 URL 추가
+        const currentUrl = window.location.href;
+        const url = new URL(currentUrl);
+        url.searchParams.set('image', imageUrl);
+        
+        // 현재 페이지를 새 URL로 대체
+        window.history.replaceState({}, '', url.toString());
+        
+        // 두 번째 캡처 대기 상태로 변경
+        setCaptureStep('waiting');
+        
+      } else {
+        console.log("첫 번째 업로드 에러:", result.error);
+        setCaptureStep('none');
+      }
+    } catch (error) {
+      console.log("첫 번째 캡처 에러:", error);
+      setCaptureStep('none');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // QR 코드가 반영된 후 두 번째 캡처 (기존 URL에 덮어쓰기)
+  const captureAndUploadImageSecond = async () => {
+    try {
+      console.log('두 번째 캡처 시작, QR URL:', qrCodeUrl);
+      setIsLoading(true);
+      setCaptureStep('second');
+      
+      // photo-card 요소만 캡처
+      const targetElement = photoCardRef.current;
+      
+      if (!targetElement) return;
+      
+      // QR 코드가 완전히 렌더링되었는지 한 번 더 확인
+      if (!isQrReady) {
+        console.log('QR 코드가 아직 준비되지 않음, 대기 중...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+      
+      // 추가 대기 시간
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // dom-to-image-more를 사용해서 이미지 생성
+      const dataUrl = await domtoimage.toPng(targetElement, {
+        quality: 1.0,
+        bgcolor: '#ffffff',
+        width: 1594,
+        height: 2543,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        },
+        // 이미지 캡처 품질 향상을 위한 옵션
+        cacheBust: true
+      });
       
       // dataURL을 Blob으로 변환
       const response = await fetch(dataUrl);
@@ -229,30 +238,28 @@ function CompletePageContent() {
       // FormData 생성
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('token', uploadToken);
-      formData.append('filePath', filePath);
+      formData.append('existingUrl', qrCodeUrl); // 기존 URL을 전달하여 덮어쓰기
       
-      addDebugInfo(`업로드 시작 - 파일 크기: ${file.size} bytes`);
-      
-      // presigned URL을 사용해서 이미지 업로드
-      const uploadResponse = await fetch('/api/upload-with-presigned', {
+      // API 엔드포인트로 이미지 업로드 요청 (덮어쓰기)
+      const uploadResponse = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData,
       });
       
-      const uploadResult = await uploadResponse.json();
+      const result = await uploadResponse.json();
       
-      if (uploadResult.success) {
-        addDebugInfo('이미지 업로드 성공');
+      if (result.success) {
+        console.log('두 번째 업로드 성공 (덮어쓰기):', result.url);
+        // 두 번째 캡처 완료
         setCaptureStep('complete');
         
       } else {
-        addDebugInfo(`이미지 업로드 에러: ${uploadResult.error}`);
-        setCaptureStep('qr_ready'); // 실패 시 다시 QR 준비 단계로
+        console.log("두 번째 업로드 에러:", result.error);
+        setCaptureStep('waiting'); // 실패 시 다시 대기 상태로
       }
     } catch (error) {
-      addDebugInfo(`이미지 캡처 및 업로드 에러: ${error}`);
-      setCaptureStep('qr_ready'); // 실패 시 다시 QR 준비 단계로
+      console.log("두 번째 캡처 에러:", error);
+      setCaptureStep('waiting'); // 실패 시 다시 대기 상태로
     } finally {
       setIsLoading(false);
     }
@@ -524,8 +531,8 @@ function CompletePageContent() {
     }, 300);
   };
 
-  // 모든 프로세스가 완료되었는지 확인
-  const isAllProcessComplete = captureStep === 'complete';
+  // 모든 업로드가 완료되었는지 확인
+  const isAllUploadsComplete = captureStep === 'complete';
 
   useEffect(() => {
     if (isCountingDown && countdown > 0) {
@@ -545,15 +552,13 @@ function CompletePageContent() {
   const getStatusMessage = () => {
     switch (captureStep) {
       case 'none':
-        return '준비 중...';
-      case 'presigned':
-        return 'URL 생성 완료, QR 코드 준비 중...';
-      case 'qr_ready':
-        return 'QR 코드 준비 완료!';
-      case 'capturing':
-        return '이미지 캡처 중...';
-      case 'uploading':
-        return '이미지 업로드 중...';
+        return '캡처 준비 중...';
+      case 'first':
+        return '첫 번째 이미지 업로드 중...';
+      case 'waiting':
+        return `QR 코드 반영 중... (QR 준비: ${isQrReady ? '완료' : '대기'})`;
+      case 'second':
+        return '최종 이미지 업로드 중...';
       case 'complete':
         return '완료!';
       default:
@@ -571,8 +576,6 @@ function CompletePageContent() {
         priority
         unoptimized
       />
-
-      
 
       <div 
         className="flex flex-col items-center justify-center z-30 mt-[300px]"
@@ -602,18 +605,12 @@ function CompletePageContent() {
           <div 
             className="qrcode absolute bottom-0 right-0 w-[460px] h-[460px] bg-white z-30 border-l-[10px] border-t-[10px] border-black rounded-tl-[50px] flex items-center justify-center"
           >
-            {qrCodeUrl ? (
-              <QRCodeComponent 
-                value={qrCodeUrl} 
-                size={380}
-                className="rounded-lg border-none"
-                onReady={handleQrReady}
-              />
-            ) : (
-              <div className="w-[380px] h-[380px] bg-white flex items-center justify-center">
-                <div className="text-[24px] text-gray-400">QR 준비중</div>
-              </div>
-            )}
+            <QRCodeComponent 
+              value={qrCodeUrl} 
+              size={380}
+              className="rounded-lg border-none"
+              onReady={handleQrReady}
+            />
           </div>
           
           <div
@@ -693,7 +690,7 @@ function CompletePageContent() {
       <div 
         className="button-container flex items-center justify-center z-30 flex-row mb-[358px] gap-x-24"
       >
-        {!isAllProcessComplete ? (
+        {!isAllUploadsComplete ? (
           <div className="text-[128px] text-[#451F0D] font-bold">
             {getStatusMessage()}
           </div>
