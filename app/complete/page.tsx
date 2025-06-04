@@ -147,7 +147,19 @@ function CompletePageContent() {
       // presigned URL 생성 요청
       const response = await fetch('/api/generate-presigned-url', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+      
+      addDebugInfo(`API 응답 상태: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        addDebugInfo(`API 응답 에러: ${errorText}`);
+        setCaptureStep('none');
+        return;
+      }
       
       const result = await response.json();
       
@@ -176,7 +188,7 @@ function CompletePageContent() {
         setCaptureStep('none');
       }
     } catch (error) {
-      addDebugInfo(`presigned URL 생성 에러: ${error}`);
+      addDebugInfo(`presigned URL 생성 네트워크 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setCaptureStep('none');
     } finally {
       setIsLoading(false);
@@ -231,26 +243,56 @@ function CompletePageContent() {
       formData.append('file', file);
       formData.append('uploadUrl', uploadUrl);
       
-      addDebugInfo(`업로드 시작 - 파일 크기: ${file.size} bytes`);
+      addDebugInfo(`업로드 시작 - 파일 크기: ${file.size} bytes, 업로드 URL 길이: ${uploadUrl.length}`);
       
-      // presigned URL을 사용해서 이미지 업로드
-      const uploadResponse = await fetch('/api/upload-with-presigned', {
-        method: 'POST',
-        body: formData,
-      });
+      // presigned URL을 사용해서 이미지 업로드 (재시도 로직 추가)
+      let uploadResult;
+      let retryCount = 0;
+      const maxRetries = 3;
       
-      const uploadResult = await uploadResponse.json();
+      while (retryCount < maxRetries) {
+        try {
+          const uploadResponse = await fetch('/api/upload-with-presigned', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          addDebugInfo(`업로드 시도 ${retryCount + 1}: 응답 상태 ${uploadResponse.status}`);
+          
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            addDebugInfo(`업로드 응답 에러: ${errorText}`);
+          }
+          
+          uploadResult = await uploadResponse.json();
+          
+          if (uploadResult.success) {
+            addDebugInfo('이미지 업로드 성공');
+            setCaptureStep('complete');
+            return;
+          } else {
+            addDebugInfo(`업로드 실패 (시도 ${retryCount + 1}): ${uploadResult.error}`);
+          }
+          
+          break;
+        } catch (networkError) {
+          retryCount++;
+          addDebugInfo(`업로드 네트워크 에러 (시도 ${retryCount}): ${networkError instanceof Error ? networkError.message : 'Unknown error'}`);
+          
+          if (retryCount < maxRetries) {
+            addDebugInfo(`${2000 * retryCount}ms 후 재시도...`);
+            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+          }
+        }
+      }
       
-      if (uploadResult.success) {
-        addDebugInfo('이미지 업로드 성공');
-        setCaptureStep('complete');
-        
-      } else {
-        addDebugInfo(`이미지 업로드 에러: ${uploadResult.error}`);
+      if (!uploadResult?.success) {
+        addDebugInfo(`모든 업로드 시도 실패 (${maxRetries}회)`);
         setCaptureStep('qr_ready'); // 실패 시 다시 QR 준비 단계로
       }
+      
     } catch (error) {
-      addDebugInfo(`이미지 캡처 및 업로드 에러: ${error}`);
+      addDebugInfo(`이미지 캡처 및 업로드 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setCaptureStep('qr_ready'); // 실패 시 다시 QR 준비 단계로
     } finally {
       setIsLoading(false);
@@ -694,8 +736,22 @@ function CompletePageContent() {
         className="button-container flex items-center justify-center z-30 flex-row mb-[358px] gap-x-24"
       >
         {!isAllProcessComplete ? (
-          <div className="text-[128px] text-[#451F0D] font-bold">
-            {getStatusMessage()}
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-[128px] text-[#451F0D] font-bold">
+              {getStatusMessage()}
+            </div>
+            
+            {/* 디버깅 정보 표시 */}
+            {debugInfo.length > 0 && (
+              <div className="bg-black/80 text-white p-4 rounded-lg max-w-[1200px] text-[24px] leading-relaxed">
+                <div className="font-bold mb-2">디버깅 정보:</div>
+                {debugInfo.map((info, index) => (
+                  <div key={index} className="mb-1 font-mono text-[20px]">
+                    {info}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <>
