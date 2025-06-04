@@ -233,7 +233,7 @@ function CompletePageContent() {
     } else if (captureStep !== 'none' && captureStep !== 'presigned' && captureStep !== 'capturing' && captureStep !== 'uploading') {
       addDebugInfo(`조건 불만족 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
     }
-  }, [captureStep, qrCodeUrl, isQrReady]); // captureAndUploadImage 의존성 제거
+  }, [qrCodeUrl]); // captureAndUploadImage 의존성 제거
 
   // QR 코드 준비 완료 콜백
   const handleQrReady = () => {
