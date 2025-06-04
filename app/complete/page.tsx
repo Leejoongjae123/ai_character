@@ -225,15 +225,11 @@ function CompletePageContent() {
       addDebugInfo(`QR 코드 준비 완료, 이미지 캡처 시작 - isLoading: ${isLoading}`);
       addDebugInfo(`모든 조건 확인 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
       
-      const timer = setTimeout(() => {
-        addDebugInfo('타이머 실행 - 이미지 캡처 함수 호출');
-        captureAndUploadImage();
-      }, 1500); // QR 코드가 완전히 렌더링될 때까지 대기
       
-      return () => {
-        addDebugInfo('타이머 정리');
-        clearTimeout(timer);
-      };
+      captureAndUploadImage();
+      
+      
+      
     } else if (captureStep !== 'none' && captureStep !== 'presigned' && captureStep !== 'capturing' && captureStep !== 'uploading') {
       addDebugInfo(`조건 불만족 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
     }
