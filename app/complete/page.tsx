@@ -82,7 +82,6 @@ function CompletePageContent() {
       addDebugInfo(`이미지 파라미터 감지: ${imageParam}`);
       setQrCodeUrl(imageParam);
       setShowQrInCard(true);
-      setIsImageUploadComplete(true); // 이미지 파라미터가 있으면 완료 상태로 설정
     }
   }, [imageParam]);
 
@@ -179,7 +178,6 @@ function CompletePageContent() {
           
           if (uploadResult.success) {
             addDebugInfo('이미지 업로드 성공');
-            setIsImageUploadComplete(true); // 업로드 완료 시 true로 설정
             return;
           } else {
             addDebugInfo(`업로드 실패 (시도 ${retryCount + 1}): ${uploadResult.error}`);
@@ -206,9 +204,9 @@ function CompletePageContent() {
     } catch (error) {
       addDebugInfo(`이미지 캡처 및 업로드 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
       // 에러가 발생해도 완료 상태로 설정 (사용자 경험을 위해)
-      setIsImageUploadComplete(true);
     } finally {
       setIsLoading(false);
+      setIsImageUploadComplete(true);
     }
   }, [uploadUrl, addDebugInfo]);
 
