@@ -36,12 +36,12 @@ function CompletePageContent() {
   const fullScreenRef = useRef<HTMLDivElement>(null);
 
   // 디버깅 정보 추가 함수
-  const addDebugInfo = (message: string) => {
+  const addDebugInfo = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     const debugMessage = `[${timestamp}] ${message}`;
     console.log(debugMessage);
     setDebugInfo(prev => [...prev.slice(-4), debugMessage]); // 최근 5개만 유지
-  };
+  }, []);
 
   // 컴포넌트 마운트 시 역할 정보 및 랜덤 값 생성
   useEffect(() => {
@@ -214,6 +214,11 @@ function CompletePageContent() {
 
   // QR 코드가 준비된 후 이미지 캡처 및 업로드
   useEffect(() => {
+    // captureStep이 complete인 경우 실행하지 않음
+    if (captureStep === 'complete') {
+      return;
+    }
+    
     if (captureStep === 'qr_ready' && qrCodeUrl && isQrReady) {
       addDebugInfo(`QR 코드 준비 완료, 이미지 캡처 시작 - isLoading: ${isLoading}`);
       addDebugInfo(`모든 조건 확인 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
@@ -227,10 +232,10 @@ function CompletePageContent() {
         addDebugInfo('타이머 정리');
         clearTimeout(timer);
       };
-    } else {
+    } else if (captureStep !== 'none' && captureStep !== 'presigned' && captureStep !== 'capturing' && captureStep !== 'uploading') {
       addDebugInfo(`조건 불만족 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
     }
-  }, [captureStep, qrCodeUrl, isQrReady, captureAndUploadImage]); // captureAndUploadImage 의존성 추가
+  }, [captureStep, qrCodeUrl, isQrReady]); // captureAndUploadImage 의존성 제거
 
   // QR 코드 준비 완료 콜백
   const handleQrReady = () => {
@@ -762,7 +767,7 @@ function CompletePageContent() {
             </div>
             
             {/* 디버깅 정보 표시 */}
-            {debugInfo.length > 0 && (
+            {debugInfo.length > 0 && !isAllProcessComplete && (
               <div className="bg-black/80 text-white p-4 rounded-lg max-w-[1200px] text-[24px] leading-relaxed">
                 <div className="font-bold mb-2">디버깅 정보:</div>
                 {debugInfo.map((info, index) => (
