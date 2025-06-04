@@ -1,30 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const token = formData.get('token') as string | null;
-    const filePath = formData.get('filePath') as string | null;
+    const uploadUrl = formData.get('uploadUrl') as string | null;
     
-    if (!file || !token || !filePath) {
+    if (!file || !uploadUrl) {
       return NextResponse.json(
-        { success: false, error: '파일, 토큰 또는 파일 경로가 제공되지 않았습니다.' },
+        { success: false, error: '파일 또는 업로드 URL이 제공되지 않았습니다.' },
         { status: 400 }
       );
     }
 
-    const supabase = await createClient();
+    // 파일을 ArrayBuffer로 변환
+    const fileBuffer = await file.arrayBuffer();
     
-    // Supabase의 uploadToSignedUrl 메서드 사용
-    const { data, error } = await supabase.storage
-      .from('images')
-      .uploadToSignedUrl(filePath, token, file);
+    // presigned URL에 직접 PUT 요청
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: fileBuffer,
+      headers: {
+        'Content-Type': file.type,
+        'Content-Length': file.size.toString(),
+      },
+    });
     
-    if (error) {
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
       return NextResponse.json(
-        { success: false, error: `업로드 실패: ${error.message}` },
+        { success: false, error: `업로드 실패: ${uploadResponse.status} - ${errorText}` },
         { status: 500 }
       );
     }
@@ -32,11 +37,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '업로드 완료',
-      data: data
+      status: uploadResponse.status
     });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { success: false, error: `서버 오류가 발생했습니다: ${error}` },
       { status: 500 }
     );
   }

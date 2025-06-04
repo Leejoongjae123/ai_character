@@ -229,8 +229,7 @@ function CompletePageContent() {
       // FormData 생성
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('token', uploadToken);
-      formData.append('filePath', filePath);
+      formData.append('uploadUrl', uploadUrl);
       
       addDebugInfo(`업로드 시작 - 파일 크기: ${file.size} bytes`);
       

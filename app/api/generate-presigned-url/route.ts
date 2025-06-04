@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     
     if (uploadError) {
       return NextResponse.json(
-        { success: false, error: uploadError.message },
+        { success: false, error: `presigned URL 생성 실패: ${uploadError.message}` },
         { status: 500 }
       );
     }
@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
     const { data: urlData } = await supabase.storage
       .from('images')
       .getPublicUrl(filePath);
+    
+    // 디버깅을 위한 로깅
+    console.log('Generated presigned URL:', uploadData.signedUrl);
+    console.log('Generated token:', uploadData.token);
+    console.log('File path:', filePath);
     
     return NextResponse.json({
       success: true,
@@ -39,7 +44,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { success: false, error: `서버 오류가 발생했습니다: ${error}` },
       { status: 500 }
     );
   }
