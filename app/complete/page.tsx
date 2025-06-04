@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import QRCodeComponent from "@/components/QRCode";
 import { useButtonSound } from "@/app/components/ButtonSound";
 import { roles } from "@/app/const/role";
@@ -108,95 +108,8 @@ function CompletePageContent() {
     }
   }, [captureStep, imageParam]);
 
-  // QR 코드가 준비된 후 이미지 캡처 및 업로드
-  useEffect(() => {
-    if (captureStep === 'qr_ready' && qrCodeUrl && isQrReady && !isLoading) {
-      addDebugInfo('QR 코드 준비 완료, 이미지 캡처 시작');
-      const timer = setTimeout(() => {
-        captureAndUploadImage();
-      }, 1500); // QR 코드가 완전히 렌더링될 때까지 대기
-      
-      return () => clearTimeout(timer);
-    }
-  }, [captureStep, qrCodeUrl, isQrReady, isLoading]);
-
-  // QR 코드 준비 완료 콜백
-  const handleQrReady = () => {
-    addDebugInfo('QR 코드 렌더링 완료');
-    setIsQrReady(true);
-    if (captureStep === 'presigned') {
-      setCaptureStep('qr_ready');
-    }
-  };
-
-  // QR 코드 URL이 변경될 때 준비 상태 초기화
-  useEffect(() => {
-    if (qrCodeUrl) {
-      setIsQrReady(false);
-      addDebugInfo(`QR 코드 URL 설정: ${qrCodeUrl.substring(0, 50)}...`);
-    }
-  }, [qrCodeUrl]);
-
-  // 1단계: presigned URL 생성 및 QR 코드 설정
-  const generatePresignedUrlAndCapture = async () => {
-    try {
-      addDebugInfo('presigned URL 생성 시작');
-      setIsLoading(true);
-      setCaptureStep('presigned');
-      
-      // presigned URL 생성 요청
-      const response = await fetch('/api/generate-presigned-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      addDebugInfo(`API 응답 상태: ${response.status} ${response.statusText}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        addDebugInfo(`API 응답 에러: ${errorText}`);
-        setCaptureStep('none');
-        return;
-      }
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        addDebugInfo(`presigned URL 생성 성공: ${result.publicUrl.substring(0, 50)}...`);
-        
-        // 상태 업데이트
-        setQrCodeUrl(result.publicUrl);
-        setUploadUrl(result.uploadUrl);
-        setUploadToken(result.token);
-        setFilePath(result.filePath);
-        setShowQrInCard(true);
-        
-        // URL 파라미터에 이미지 URL 추가
-        const currentUrl = window.location.href;
-        const url = new URL(currentUrl);
-        url.searchParams.set('image', result.publicUrl);
-        
-        // 현재 페이지를 새 URL로 대체
-        window.history.replaceState({}, '', url.toString());
-        
-        addDebugInfo('QR 코드 렌더링 대기 중');
-        
-      } else {
-        addDebugInfo(`presigned URL 생성 에러: ${result.error}`);
-        setCaptureStep('none');
-      }
-    } catch (error) {
-      addDebugInfo(`presigned URL 생성 네트워크 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setCaptureStep('none');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // 2단계: 이미지 캡처 및 업로드
-  const captureAndUploadImage = async () => {
+  const captureAndUploadImage = useCallback(async () => {
     try {
       addDebugInfo('이미지 캡처 시작');
       setIsLoading(true);
@@ -294,6 +207,113 @@ function CompletePageContent() {
     } catch (error) {
       addDebugInfo(`이미지 캡처 및 업로드 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setCaptureStep('qr_ready'); // 실패 시 다시 QR 준비 단계로
+    } finally {
+      setIsLoading(false);
+    }
+  }, [uploadUrl, addDebugInfo]);
+
+  // QR 코드가 준비된 후 이미지 캡처 및 업로드
+  useEffect(() => {
+    if (captureStep === 'qr_ready' && qrCodeUrl && isQrReady) {
+      addDebugInfo(`QR 코드 준비 완료, 이미지 캡처 시작 - isLoading: ${isLoading}`);
+      addDebugInfo(`모든 조건 확인 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
+      
+      const timer = setTimeout(() => {
+        addDebugInfo('타이머 실행 - 이미지 캡처 함수 호출');
+        captureAndUploadImage();
+      }, 1500); // QR 코드가 완전히 렌더링될 때까지 대기
+      
+      return () => {
+        addDebugInfo('타이머 정리');
+        clearTimeout(timer);
+      };
+    } else {
+      addDebugInfo(`조건 불만족 - captureStep: ${captureStep}, qrCodeUrl: ${!!qrCodeUrl}, isQrReady: ${isQrReady}`);
+    }
+  }, [captureStep, qrCodeUrl, isQrReady, captureAndUploadImage]); // captureAndUploadImage 의존성 추가
+
+  // QR 코드 준비 완료 콜백
+  const handleQrReady = () => {
+    addDebugInfo('QR 코드 렌더링 완료');
+    addDebugInfo(`QR 준비 전 상태 - captureStep: ${captureStep}, isQrReady: ${isQrReady}`);
+    setIsQrReady(true);
+    if (captureStep === 'presigned') {
+      addDebugInfo('captureStep을 qr_ready로 변경');
+      setCaptureStep('qr_ready');
+      
+      // 대체 트리거: useEffect가 실행되지 않는 경우를 대비해 직접 호출
+      setTimeout(() => {
+        addDebugInfo('대체 트리거 실행 - 직접 이미지 캡처 호출');
+        captureAndUploadImage();
+      }, 2000);
+    } else {
+      addDebugInfo(`captureStep이 presigned가 아님: ${captureStep}`);
+    }
+  };
+
+  // QR 코드 URL이 변경될 때 준비 상태 초기화
+  useEffect(() => {
+    if (qrCodeUrl) {
+      setIsQrReady(false);
+      addDebugInfo(`QR 코드 URL 설정: ${qrCodeUrl.substring(0, 50)}...`);
+      addDebugInfo(`QR URL 설정 후 상태 - captureStep: ${captureStep}, isQrReady: false`);
+    }
+  }, [qrCodeUrl]);
+
+  // 1단계: presigned URL 생성 및 QR 코드 설정
+  const generatePresignedUrlAndCapture = async () => {
+    try {
+      addDebugInfo('presigned URL 생성 시작');
+      setIsLoading(true);
+      setCaptureStep('presigned');
+      
+      // presigned URL 생성 요청
+      const response = await fetch('/api/generate-presigned-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      addDebugInfo(`API 응답 상태: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        addDebugInfo(`API 응답 에러: ${errorText}`);
+        setCaptureStep('none');
+        return;
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        addDebugInfo(`presigned URL 생성 성공: ${result.publicUrl.substring(0, 50)}...`);
+        
+        // 상태 업데이트
+        setQrCodeUrl(result.publicUrl);
+        setUploadUrl(result.uploadUrl);
+        setUploadToken(result.token);
+        setFilePath(result.filePath);
+        setShowQrInCard(true);
+        
+        // URL 파라미터에 이미지 URL 추가
+        const currentUrl = window.location.href;
+        const url = new URL(currentUrl);
+        url.searchParams.set('image', result.publicUrl);
+        
+        // 현재 페이지를 새 URL로 대체
+        window.history.replaceState({}, '', url.toString());
+        
+        addDebugInfo('QR 코드 렌더링 대기 중');
+        addDebugInfo(`현재 상태 - captureStep: ${captureStep}, isLoading: ${isLoading}`);
+        
+      } else {
+        addDebugInfo(`presigned URL 생성 에러: ${result.error}`);
+        setCaptureStep('none');
+      }
+    } catch (error) {
+      addDebugInfo(`presigned URL 생성 네트워크 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setCaptureStep('none');
     } finally {
       setIsLoading(false);
     }
@@ -751,6 +771,19 @@ function CompletePageContent() {
                   </div>
                 ))}
               </div>
+            )}
+            
+            {/* QR 코드 준비 완료 후 5초 이상 대기 시 강제 실행 버튼 표시 */}
+            {captureStep === 'qr_ready' && (
+              <Button
+                onClick={() => {
+                  addDebugInfo('강제 실행 버튼 클릭');
+                  captureAndUploadImage();
+                }}
+                className="mt-4 px-8 py-4 text-[32px] bg-red-500 text-white rounded-lg"
+              >
+                강제 실행
+              </Button>
             )}
           </div>
         ) : (
