@@ -125,17 +125,16 @@ function CompletePageContent() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       addDebugInfo('DOM to Image 변환 시작');
-      // dom-to-image-more를 사용해서 이미지 생성
-      const dataUrl = await domtoimage.toPng(targetElement, {
-        quality: 1.0,
+      // 더 작은 크기와 JPEG로 캡처하여 용량 줄이기
+      const dataUrl = await domtoimage.toJpeg(targetElement, {
+        quality: 0.7, // JPEG 품질 70%로 압축
         bgcolor: '#ffffff',
-        width: 1594,
-        height: 2543,
+        width: 797, // 원본의 50% 크기
+        height: 1271, // 원본의 50% 크기
         style: {
-          transform: 'scale(1)',
+          transform: 'scale(0.5)', // 50% 스케일
           transformOrigin: 'top left'
         },
-        // 이미지 캡처 품질 향상을 위한 옵션
         cacheBust: true
       });
       
@@ -145,61 +144,27 @@ function CompletePageContent() {
       const response = await fetch(dataUrl);
       const blob = await response.blob();
       
-      // 파일 객체 생성
-      const file = new File([blob], 'photo-card.png', { type: 'image/png' });
+      addDebugInfo(`이미지 크기: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
       
-      // FormData 생성
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('uploadUrl', uploadUrl);
+      // presigned URL로 직접 업로드 (Vercel API Route 우회)
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: blob,
+        headers: {
+          'Content-Type': 'image/jpeg',
+          'Content-Length': blob.size.toString(),
+        },
+      });
       
-      addDebugInfo(`업로드 시작 - 파일 크기: ${file.size} bytes, 업로드 URL 길이: ${uploadUrl.length}`);
+      addDebugInfo(`직접 업로드 응답: ${uploadResponse.status} ${uploadResponse.statusText}`);
       
-      // presigned URL을 사용해서 이미지 업로드 (재시도 로직 추가)
-      let uploadResult;
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (retryCount < maxRetries) {
-        try {
-          const uploadResponse = await fetch('/api/upload-with-presigned', {
-            method: 'POST',
-            body: formData,
-          });
-          
-          addDebugInfo(`업로드 시도 ${retryCount + 1}: 응답 상태 ${uploadResponse.status}`);
-          
-          if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            addDebugInfo(`업로드 응답 에러: ${errorText}`);
-          }
-          
-          uploadResult = await uploadResponse.json();
-          
-          if (uploadResult.success) {
-            addDebugInfo('이미지 업로드 성공');
-            return;
-          } else {
-            addDebugInfo(`업로드 실패 (시도 ${retryCount + 1}): ${uploadResult.error}`);
-          }
-          
-          break;
-        } catch (networkError) {
-          retryCount++;
-          addDebugInfo(`업로드 네트워크 에러 (시도 ${retryCount}): ${networkError instanceof Error ? networkError.message : 'Unknown error'}`);
-          
-          if (retryCount < maxRetries) {
-            addDebugInfo(`${2000 * retryCount}ms 후 재시도...`);
-            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
-          }
-        }
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        addDebugInfo(`직접 업로드 에러: ${errorText}`);
+        return;
       }
       
-      if (!uploadResult?.success) {
-        addDebugInfo(`모든 업로드 시도 실패 (${maxRetries}회)`);
-        // 실패해도 일단 완료 상태로 설정 (사용자 경험을 위해)
-        setIsImageUploadComplete(true);
-      }
+      addDebugInfo('이미지 업로드 성공');
       
     } catch (error) {
       addDebugInfo(`이미지 캡처 및 업로드 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);

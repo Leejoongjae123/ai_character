@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
     
-    // 고유한 파일명 생성
-    const fileName = `${uuidv4()}.png`;
+    // 고유한 파일명 생성 (JPEG로 변경)
+    const fileName = `${uuidv4()}.jpg`;
     const filePath = `photocards/${fileName}`;
     
     console.log('파일 경로 생성:', filePath);
