@@ -652,7 +652,7 @@ function CompletePageContent() {
               src={character?.result || ""}
               alt={character?.title || "role1"}
               
-              className="object-contain w-[1348px] h-[2050px]"
+              className="object-cover w-[1348px] h-[2050px]"
             />
           </div>
           
@@ -756,7 +756,7 @@ function CompletePageContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="w-full h-screen flex items-center justify-center text-[64px]">로딩 중...</div>}>
+    <Suspense fallback={<div className="w-full h-screen flex items-center justify-center text-[64px]"></div>}>
       <CompletePageContent />
     </Suspense>
   );
