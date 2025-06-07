@@ -162,7 +162,7 @@ function CompletePageContent() {
       
       while (retryCount < maxRetries) {
         try {
-          const uploadResponse = await fetch('https://yvipg36ktr6q4yxthmhhgtm2sq0fekos.lambda-url.ap-northeast-2.on.aws/upload-with-presigned', {
+          const uploadResponse = await fetch('https://u90nizmnql.execute-api.ap-northeast-2.amazonaws.com/upload-with-presigned', {
             method: 'POST',
             body: formData,
           });
