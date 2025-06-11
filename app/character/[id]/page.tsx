@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { roles } from "@/app/const/role";
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useButtonSound } from "@/app/components/ButtonSound";
 import { useVoiceRecognition } from "@/app/utils/useVoiceRecognition";
 import { Loader2 } from "lucide-react";
@@ -187,10 +187,8 @@ export default function Home() {
   const [showPromptContent, setShowPromptContent] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInput, setModalInput] = useState('');
-  const [isShiftPressed, setIsShiftPressed] = useState(false);
-  const [isCapsLock, setIsCapsLock] = useState(false);
-  const [isKoreanMode, setIsKoreanMode] = useState(true);
   const [isKeyboardPressed, setIsKeyboardPressed] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { playSound } = useButtonSound();
   const { setMuted } = useAudioStore();
   const { 
@@ -202,45 +200,6 @@ export default function Home() {
   } = useVoiceRecognition();
 
   const role = roles.find((role) => role.id === parseInt(id as string));
-
-  // 한글 키보드 레이아웃
-  const koreanLayout = {
-    row1: ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='],
-    row2: ['ㅂ', 'ㅈ', 'ㄷ', 'ㄱ', 'ㅅ', 'ㅛ', 'ㅕ', 'ㅑ', 'ㅐ', 'ㅔ', '[', ']', '\\'],
-    row3: ['ㅁ', 'ㄴ', 'ㅇ', 'ㄹ', 'ㅎ', 'ㅗ', 'ㅓ', 'ㅏ', 'ㅣ', ';', "'"],
-    row4: ['ㅋ', 'ㅌ', 'ㅊ', 'ㅍ', 'ㅠ', 'ㅜ', 'ㅡ', ',', '.', '/']
-  };
-
-  const koreanShiftLayout = {
-    row1: ['~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'],
-    row2: ['ㅃ', 'ㅉ', 'ㄸ', 'ㄲ', 'ㅆ', 'ㅛ', 'ㅕ', 'ㅑ', 'ㅒ', 'ㅖ', '{', '}', '|'],
-    row3: ['ㅁ', 'ㄴ', 'ㅇ', 'ㄹ', 'ㅎ', 'ㅗ', 'ㅓ', 'ㅏ', 'ㅣ', ':', '"'],
-    row4: ['ㅋ', 'ㅌ', 'ㅊ', 'ㅍ', 'ㅠ', 'ㅜ', 'ㅡ', '<', '>', '?']
-  };
-
-  // 영어 키보드 레이아웃
-  const englishLayout = {
-    row1: ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='],
-    row2: ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\'],
-    row3: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'"],
-    row4: ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/']
-  };
-
-  const englishShiftLayout = {
-    row1: ['~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'],
-    row2: ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '|'],
-    row3: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"'],
-    row4: ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?']
-  };
-
-  // 현재 레이아웃 가져오기
-  const getCurrentLayout = () => {
-    if (isKoreanMode) {
-      return (isShiftPressed || isCapsLock) ? koreanShiftLayout : koreanLayout;
-    } else {
-      return (isShiftPressed || isCapsLock) ? englishShiftLayout : englishLayout;
-    }
-  };
 
   // 음성 인식 결과를 상황 설명으로 설정
   useEffect(() => {
@@ -254,6 +213,18 @@ export default function Home() {
   useEffect(() => {
     setMuted(isRecording);
   }, [isRecording, setMuted]);
+
+  // 모달이 열릴 때 텍스트 영역에 포커스하여 시스템 키보드 띄우기
+  useEffect(() => {
+    if (isModalOpen && textareaRef.current) {
+      // 약간의 지연 후 포커스 (모달 애니메이션 완료 후)
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        // 모바일에서 키보드를 강제로 띄우기 위한 추가 처리
+        textareaRef.current?.click();
+      }, 100);
+    }
+  }, [isModalOpen]);
 
   // 마이크 아이콘 클릭 처리
   const handleMicClick = () => {
@@ -285,35 +256,6 @@ export default function Home() {
     setModalInput(situation);
     setIsKeyboardPressed(true);
     setIsModalOpen(true);
-  };
-
-  // 키 입력 처리 (한글 조합 로직 적용)
-  const handleKeyPress = (key: string) => {
-    if (key === 'BACKSPACE') {
-      setModalInput(prev => prev.slice(0, -1));
-    } else if (key === 'SPACE') {
-      setModalInput(prev => prev + ' ');
-    } else if (key === 'ENTER') {
-      setModalInput(prev => prev + '\n');
-    } else if (key === 'SHIFT') {
-      setIsShiftPressed(!isShiftPressed);
-    } else if (key === 'CAPS') {
-      setIsCapsLock(!isCapsLock);
-    } else if (key === 'KOREAN') {
-      setIsKoreanMode(!isKoreanMode);
-    } else {
-      // 한글 모드일 때 한글 조합 로직 적용
-      if (isKoreanMode && (isChosung(key) || isJungsung(key))) {
-        setModalInput(prev => processKoreanInput(prev, key));
-      } else {
-        setModalInput(prev => prev + key);
-      }
-      
-      // Shift가 눌려있었다면 해제 (CapsLock이 아닌 경우)
-      if (isShiftPressed && !isCapsLock) {
-        setIsShiftPressed(false);
-      }
-    }
   };
 
   // 모달에서 확인 버튼 클릭 처리
@@ -350,8 +292,6 @@ export default function Home() {
       router.push(`/camera?character=${id}&situation=${encodeURIComponent(situation)}`);
     }, 300);
   };
-
-  const layout = getCurrentLayout();
 
   return (
     <div className="w-full h-screen relative flex flex-col items-center justify-between">
@@ -463,165 +403,48 @@ export default function Home() {
               />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[95vw] h-[39vh] max-h-[95vh] overflow-hidden bg-[#F5E6D3] border-[#D3B582] border-4">
+          <DialogContent className="sm:max-w-[1200px] max-h-[600px] bg-[#F5E6D3] border-[#D3B582] border-4">
             <DialogHeader>
-              <DialogTitle className="text-[120px] font-bold text-[#481F0E] text-center">
+              <DialogTitle className="text-[60px] font-bold text-[#481F0E] text-center">
                 상황 입력
               </DialogTitle>
             </DialogHeader>
             
-            <div className="flex flex-col gap-4 py-4 h-full">
+            <div className="flex flex-col gap-6 py-4">
               {/* 텍스트 입력 영역 */}
               <Textarea
+                ref={textareaRef}
                 value={modalInput}
                 onChange={(e) => setModalInput(e.target.value)}
                 placeholder="캐릭터에 설정할 상황을 입력해주세요..."
-                className="h-[120px] bg-white border-[#D3B582] border-2 text-[#481F0E] placeholder:text-[#481F0E]/50 resize-none"
+                className="min-h-[200px] bg-white border-[#D3B582] border-2 text-[#481F0E] placeholder:text-[#481F0E]/50 resize-none"
                 style={{ 
-                  fontSize: '60px', 
-                  lineHeight: '1.2',
-                  padding: '20px'
+                  fontSize: '24px', 
+                  lineHeight: '1.4',
+                  padding: '16px'
                 }}
+                autoFocus
+                // 키오스크/터치 디바이스에서 가상 키보드를 띄우기 위한 속성들
+                inputMode="text"
+                enterKeyHint="done"
               />
               
-              {/* 커스텀 키보드 */}
-              <div className="flex-1 bg-[#F5E6D3] rounded-lg p-4 border-2 border-[#D3B582] flex flex-col gap-2">
-                {/* 첫 번째 줄 */}
-                <div className="flex gap-1 flex-1">
-                  {layout.row1.map((key, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
-                    >
-                      {key}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => handleKeyPress('BACKSPACE')}
-                    className="w-24 min-h-[78px] bg-[#E74C3C] hover:bg-[#C0392B] border border-[#471F0D] rounded text-white font-bold text-[52px] flex items-center justify-center"
-                  >
-                    ⌫
-                  </button>
-                </div>
-
-                {/* 두 번째 줄 */}
-                <div className="flex gap-1 flex-1">
-                  <button className="w-20 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[39px] flex items-center justify-center">
-                    Tab
-                  </button>
-                  {layout.row2.map((key, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
-                    >
-                      {key}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 세 번째 줄 */}
-                <div className="flex gap-1 flex-1">
-                  <button
-                    onClick={() => handleKeyPress('CAPS')}
-                    className={`w-24 min-h-[78px] border border-[#471F0D] rounded font-bold text-[39px] flex items-center justify-center ${
-                      isCapsLock 
-                        ? 'bg-[#C49E30] text-white' 
-                        : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
-                    }`}
-                  >
-                    Caps
-                  </button>
-                  {layout.row3.map((key, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
-                    >
-                      {key}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => handleKeyPress('ENTER')}
-                    className="w-24 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[52px] flex items-center justify-center"
-                  >
-                    ⏎
-                  </button>
-                </div>
-
-                {/* 네 번째 줄 */}
-                <div className="flex gap-1 flex-1">
-                  <button
-                    onClick={() => handleKeyPress('SHIFT')}
-                    className={`w-28 min-h-[78px] border border-[#471F0D] rounded font-bold text-[39px] flex items-center justify-center ${
-                      isShiftPressed 
-                        ? 'bg-[#C49E30] text-white' 
-                        : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
-                    }`}
-                  >
-                    Shift
-                  </button>
-                  {layout.row4.map((key, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleKeyPress(key)}
-                      className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[78px] flex items-center justify-center"
-                    >
-                      {key}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => handleKeyPress('SHIFT')}
-                    className={`w-28 min-h-[78px] border border-[#471F0D] rounded font-bold text-[39px] flex items-center justify-center ${
-                      isShiftPressed 
-                        ? 'bg-[#C49E30] text-white' 
-                        : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
-                    }`}
-                  >
-                    Shift
-                  </button>
-                </div>
-
-                {/* 다섯 번째 줄 (스페이스바 등) */}
-                <div className="flex gap-1 flex-1">
-                  <button
-                    onClick={() => handleKeyPress('KOREAN')}
-                    className={`w-24 min-h-[78px] border border-[#471F0D] rounded font-bold text-[52px] flex items-center justify-center ${
-                      isKoreanMode 
-                        ? 'bg-[#C49E30] text-white' 
-                        : 'bg-[#E4BE50] hover:bg-[#D4AE40] text-[#471F0D]'
-                    }`}
-                  >
-                    {isKoreanMode ? '한' : 'A'}
-                  </button>
-                  <button
-                    onClick={() => handleKeyPress('SPACE')}
-                    className="flex-1 min-h-[78px] bg-[#E4BE50] hover:bg-[#D4AE40] active:bg-[#C49E30] border border-[#471F0D] rounded text-[#471F0D] font-bold text-[52px] flex items-center justify-center"
-                  >
-                    Space
-                  </button>
-                </div>
+              {/* 버튼 영역 */}
+              <div className="flex justify-center gap-4">
+                <Button
+                  onClick={handleModalCancel}
+                  variant="outline"
+                  className="w-32 h-16 text-lg font-bold text-[#481F0E] bg-white border-[#D3B582] border-2 hover:bg-[#F5E6D3]"
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={handleModalConfirm}
+                  className="w-32 h-16 text-lg font-bold text-[#451F0D] bg-[#E4BE50] border-[#471F0D] border-2 hover:bg-[#D4AE40]"
+                >
+                  확인
+                </Button>
               </div>
-            </div>
-            
-            {/* 버튼 영역 */}
-            <div className="flex justify-center gap-4 mt-4">
-              <Button
-                onClick={handleModalCancel}
-                variant="outline"
-                className="w-1/5 h-[120px] text-[80px] font-bold text-[#481F0E] bg-white border-[#D3B582] border-2 hover:bg-[#F5E6D3]"
-                style={{ fontFamily: "Noto Sans KR, sans-serif" }}
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleModalConfirm}
-                className="w-1/5 h-[120px] text-[80px] font-bold text-[#451F0D] bg-[#E4BE50] border-[#471F0D] border-2 hover:bg-[#D4AE40]"
-                style={{ fontFamily: "Noto Sans KR, sans-serif" }}
-              >
-                확인
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
