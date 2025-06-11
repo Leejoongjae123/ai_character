@@ -33,6 +33,7 @@ function CompletePageContent() {
   const searchParams = useSearchParams();
   const characterId = searchParams.get("character");
   const imageParam = searchParams.get("image");
+  const resultImageParam = searchParams.get("resultImage");
   const photoCardRef = useRef<HTMLDivElement>(null);
   const fullScreenRef = useRef<HTMLDivElement>(null);
 
@@ -46,19 +47,19 @@ function CompletePageContent() {
       const currentTime = Date.now();
       const elapsedTime = currentTime - startTime;
       
-      // 30초가 지나지 않았다면 출력 상태 유지
-      if (elapsedTime < 30000) {
+      // 60초가 지나지 않았다면 출력 상태 유지
+      if (elapsedTime < 60000) {
         setIsPrinting(true);
         
         // 남은 시간만큼 타이머 설정
-        const remainingTime = 30000 - elapsedTime;
+        const remainingTime = 60000 - elapsedTime;
         setTimeout(() => {
           setIsPrinting(false);
           localStorage.removeItem('isPrinting');
           localStorage.removeItem('printingStartTime');
         }, remainingTime);
       } else {
-        // 30초가 지났다면 상태 정리
+        // 60초가 지났다면 상태 정리
         localStorage.removeItem('isPrinting');
         localStorage.removeItem('printingStartTime');
       }
@@ -112,8 +113,13 @@ function CompletePageContent() {
       addDebugInfo(`이미지 파라미터 감지: ${imageParam}`);
       setQrCodeUrl(imageParam);
       setShowQrInCard(true);
+    } else if (resultImageParam) {
+      addDebugInfo(`결과 이미지 파라미터 감지: ${resultImageParam}`);
+      setQrCodeUrl(resultImageParam);
+      setShowQrInCard(true);
+      setIsImageUploadComplete(true); // 이미지가 이미 완성되었음을 표시
     }
-  }, [imageParam]);
+  }, [imageParam, resultImageParam]);
 
   // 페이지 로드 시 이미지가 아직 캡처되지 않았고 이미지 파라미터도 없는 경우 자동으로 프로세스 시작
   useEffect(() => {
@@ -132,10 +138,10 @@ function CompletePageContent() {
     };
     
     // DOM이 준비된 후 실행
-    if (photoCardRef.current && !isImageUploadComplete && !imageParam) {
+    if (photoCardRef.current && !isImageUploadComplete && !imageParam && !resultImageParam) {
       autoStart();
     }
-  }, [isImageUploadComplete, imageParam]);
+  }, [isImageUploadComplete, imageParam, resultImageParam]);
 
   // 2단계: 이미지 캡처 및 업로드
   const captureAndUploadImage = useCallback(async () => {
@@ -345,12 +351,12 @@ function CompletePageContent() {
       handlePrint();
     }, 100);
     
-    // 30초 후 출력 상태 해제
+    // 60초 후 출력 상태 해제
     setTimeout(() => {
       setIsPrinting(false);
       localStorage.removeItem('isPrinting');
       localStorage.removeItem('printingStartTime');
-    }, 30000);
+    }, 60000);
   };
 
   const handleGoHome = () => {
@@ -696,7 +702,7 @@ function CompletePageContent() {
             className="absolute inset-0"
           >
             <img
-              src={character?.result || ""}
+              src={resultImageParam || character?.result || ""}
               alt={character?.title || "role1"}
               
               className="object-cover w-[1348px] h-[2050px]"
@@ -778,7 +784,7 @@ function CompletePageContent() {
         ) : isPrinting ? (
           <div className="flex flex-col items-center gap-4">
             <div className="text-[128px] text-[#451F0D] font-bold">
-              카드 출력중
+              출력 중입니다. 잠시만 기다려 주세요.
             </div>
           </div>
         ) : (
