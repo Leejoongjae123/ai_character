@@ -403,25 +403,25 @@ export default function Home() {
               />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[1200px] max-h-[600px] bg-[#F5E6D3] border-[#D3B582] border-4">
+          <DialogContent className="sm:max-w-[1600px] max-h-[1200px] bg-[#F5E6D3] border-[#D3B582] border-4">
             <DialogHeader>
-              <DialogTitle className="text-[60px] font-bold text-[#481F0E] text-center">
+              <DialogTitle className="text-[120px] font-bold text-[#481F0E] text-center mb-8">
                 상황 입력
               </DialogTitle>
             </DialogHeader>
             
-            <div className="flex flex-col gap-6 py-4">
+            <div className="flex flex-col gap-12 py-8">
               {/* 텍스트 입력 영역 */}
               <Textarea
                 ref={textareaRef}
                 value={modalInput}
                 onChange={(e) => setModalInput(e.target.value)}
                 placeholder="캐릭터에 설정할 상황을 입력해주세요..."
-                className="min-h-[200px] bg-white border-[#D3B582] border-2 text-[#481F0E] placeholder:text-[#481F0E]/50 resize-none"
+                className="min-h-[400px] bg-white border-[#D3B582] border-4 text-[#481F0E] placeholder:text-[#481F0E]/50 resize-none"
                 style={{ 
-                  fontSize: '24px', 
+                  fontSize: '48px', 
                   lineHeight: '1.4',
-                  padding: '16px'
+                  padding: '32px'
                 }}
                 autoFocus
                 // 키오스크/터치 디바이스에서 가상 키보드를 띄우기 위한 속성들
@@ -430,17 +430,19 @@ export default function Home() {
               />
               
               {/* 버튼 영역 */}
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-12">
                 <Button
                   onClick={handleModalCancel}
                   variant="outline"
-                  className="w-32 h-16 text-lg font-bold text-[#481F0E] bg-white border-[#D3B582] border-2 hover:bg-[#F5E6D3]"
+                  className="w-[200px] h-[100px] text-[60px] font-bold text-[#481F0E] bg-white border-[#D3B582] border-4 hover:bg-[#F5E6D3]"
+                  style={{ fontFamily: "Noto Sans KR, serif" }}
                 >
                   취소
                 </Button>
                 <Button
                   onClick={handleModalConfirm}
-                  className="w-32 h-16 text-lg font-bold text-[#451F0D] bg-[#E4BE50] border-[#471F0D] border-2 hover:bg-[#D4AE40]"
+                  className="w-[200px] h-[100px] text-[60px] font-bold text-[#451F0D] bg-[#E4BE50] border-[#471F0D] border-4 hover:bg-[#D4AE40]"
+                  style={{ fontFamily: "Noto Sans KR, serif" }}
                 >
                   확인
                 </Button>
