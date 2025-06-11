@@ -419,7 +419,7 @@ export default function Home() {
                 placeholder="캐릭터에 설정할 상황을 입력해주세요."
                 className="min-h-[400px] bg-white border-[#D3B582] border-4 text-[#481F0E] placeholder:text-[#481F0E]/50 resize-none"
                 style={{ 
-                  fontSize: '48px', 
+                  fontSize: '85px', 
                   lineHeight: '1.4',
                   padding: '32px'
                 }}
