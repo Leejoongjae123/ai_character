@@ -403,7 +403,7 @@ export default function Home() {
               />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[1600px] max-h-[1200px] bg-[#F5E6D3] border-[#D3B582] border-4">
+          <DialogContent className="sm:max-w-[1800px] px-[100px]  max-h-[1200px] bg-[#F5E6D3] border-[#D3B582] border-4">
             <DialogHeader>
               <DialogTitle className="text-[120px] font-bold text-[#481F0E] text-center mb-8">
                 상황 입력
@@ -416,7 +416,7 @@ export default function Home() {
                 ref={textareaRef}
                 value={modalInput}
                 onChange={(e) => setModalInput(e.target.value)}
-                placeholder="캐릭터에 설정할 상황을 입력해주세요..."
+                placeholder="캐릭터에 설정할 상황을 입력해주세요."
                 className="min-h-[400px] bg-white border-[#D3B582] border-4 text-[#481F0E] placeholder:text-[#481F0E]/50 resize-none"
                 style={{ 
                   fontSize: '48px', 
