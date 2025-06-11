@@ -36,35 +36,6 @@ function CompletePageContent() {
   const photoCardRef = useRef<HTMLDivElement>(null);
   const fullScreenRef = useRef<HTMLDivElement>(null);
 
-  // 출력 상태를 localStorage에서 확인하고 복원
-  useEffect(() => {
-    const printingState = localStorage.getItem('isPrinting');
-    const printingStartTime = localStorage.getItem('printingStartTime');
-    
-    if (printingState === 'true' && printingStartTime) {
-      const startTime = parseInt(printingStartTime);
-      const currentTime = Date.now();
-      const elapsedTime = currentTime - startTime;
-      
-      // 30초가 지나지 않았다면 출력 상태 유지
-      if (elapsedTime < 30000) {
-        setIsPrinting(true);
-        
-        // 남은 시간만큼 타이머 설정
-        const remainingTime = 30000 - elapsedTime;
-        setTimeout(() => {
-          setIsPrinting(false);
-          localStorage.removeItem('isPrinting');
-          localStorage.removeItem('printingStartTime');
-        }, remainingTime);
-      } else {
-        // 30초가 지났다면 상태 정리
-        localStorage.removeItem('isPrinting');
-        localStorage.removeItem('printingStartTime');
-      }
-    }
-  }, []);
-
   // 디버깅 정보 추가 함수
   const addDebugInfo = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -334,11 +305,8 @@ function CompletePageContent() {
   const handleTransform = () => {
     playSound();
     
-    // 출력 상태를 즉시 설정하고 localStorage에 저장
+    // 출력 상태를 즉시 설정
     setIsPrinting(true);
-    const startTime = Date.now();
-    localStorage.setItem('isPrinting', 'true');
-    localStorage.setItem('printingStartTime', startTime.toString());
     
     // 상태 업데이트가 확실히 반영된 후 프린트 실행
     setTimeout(() => {
@@ -348,8 +316,6 @@ function CompletePageContent() {
     // 30초 후 출력 상태 해제
     setTimeout(() => {
       setIsPrinting(false);
-      localStorage.removeItem('isPrinting');
-      localStorage.removeItem('printingStartTime');
     }, 30000);
   };
 
@@ -778,7 +744,7 @@ function CompletePageContent() {
         ) : isPrinting ? (
           <div className="flex flex-col items-center gap-4">
             <div className="text-[128px] text-[#451F0D] font-bold">
-              카드 출력중
+              현재 출력중입니다
             </div>
           </div>
         ) : (
