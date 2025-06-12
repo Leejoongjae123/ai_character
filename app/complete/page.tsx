@@ -115,9 +115,9 @@ function CompletePageContent() {
       setShowQrInCard(true);
     } else if (resultImageParam) {
       addDebugInfo(`결과 이미지 파라미터 감지: ${resultImageParam}`);
-      setQrCodeUrl(resultImageParam);
+      // resultImageParam이 있어도 QR 코드 URL은 설정하지 않음 (새로 생성해야 함)
       setShowQrInCard(true);
-      setIsImageUploadComplete(true); // 이미지가 이미 완성되었음을 표시
+      // isImageUploadComplete를 true로 설정하지 않음 - 새로운 포토카드를 업로드해야 함
     }
   }, [imageParam, resultImageParam]);
 
@@ -125,6 +125,7 @@ function CompletePageContent() {
   useEffect(() => {
     const autoStart = async () => {
       // 이미 프로세스가 시작되었거나 이미지 파라미터가 있는 경우 실행하지 않음
+      // resultImageParam이 있는 경우에는 새로운 포토카드를 생성해야 하므로 프로세스 실행
       if (isImageUploadComplete || imageParam) return;
       
       addDebugInfo('자동 프로세스 시작 준비');
@@ -138,10 +139,11 @@ function CompletePageContent() {
     };
     
     // DOM이 준비된 후 실행
-    if (photoCardRef.current && !isImageUploadComplete && !imageParam && !resultImageParam) {
+    // resultImageParam이 있어도 새로운 포토카드를 생성해야 하므로 조건에서 제외
+    if (photoCardRef.current && !isImageUploadComplete && !imageParam) {
       autoStart();
     }
-  }, [isImageUploadComplete, imageParam, resultImageParam]);
+  }, [isImageUploadComplete, imageParam]); // resultImageParam 의존성 제거
 
   // 2단계: 이미지 캡처 및 업로드
   const captureAndUploadImage = useCallback(async () => {
