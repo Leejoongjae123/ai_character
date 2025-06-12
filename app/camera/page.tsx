@@ -38,7 +38,7 @@ function CameraClient({ characterId }: CameraClientProps) {
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showLottieLoader, setShowLottieLoader] = useState(false);
-  const [processingMessage, setProcessingMessage] = useState("이미지 생성중...(약2분 소요)");
+  const [processingMessage, setProcessingMessage] = useState("이미지 생성중...");
   const { playSound } = useButtonSound();
   const flashSoundRef = useRef<HTMLAudioElement | null>(null);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -106,7 +106,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         return;
       }
 
-      setProcessingMessage("이미지 생성중...(약2분소요)");
+      setProcessingMessage("이미지 생성중...");
 
       // 2. 작업 상태 폴링
       const finalResult = await pollJobStatus(
@@ -114,7 +114,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         (status) => {
           // 진행 상황 업데이트
           if (status.status === 'processing') {
-            setProcessingMessage("이미지 생성중...(약2분소요)");
+            setProcessingMessage("이미지 생성중...");
           }
         }
       );
