@@ -13,6 +13,7 @@ import { requestFaceSwap, pollJobStatus } from "@/utils/faceSwap";
 import { WebcamComponent } from "./components/WebcamComponent";
 import { CameraCorners } from "./components/CameraCorners";
 import { ProcessingStatus } from "./components/ProcessingStatus";
+import { FaceGuide } from "./components/FaceGuide";
 import { PageProps, CameraPageContentProps, CameraClientProps } from "./types";
 
 export default function Page({ searchParams }: PageProps) {
@@ -251,7 +252,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         </div>
       </div>
 
-      <div className="relative w-[1225px] aspect-square animate-fade-in-delay">
+      <div className="relative w-[1225px] aspect-square animate-fade-in-delay rounded-full overflow-hidden">
         {/* 하얀 원 (플래시 효과) */}
         {showWhiteCircle && !capturedPhoto && !showLottieLoader && (
           <div className="absolute inset-0 bg-white rounded-full z-40 animate-pulse"></div>
@@ -285,10 +286,12 @@ function CameraClient({ characterId }: CameraClientProps) {
 
         {/* 웹캠 컴포넌트 */}
         {!capturedPhoto && !showLottieLoader && (
-          <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="absolute inset-0 flex items-center justify-center z-20 rounded-full overflow-hidden">
             <WebcamComponent onVideoRef={handleVideoRef} />
           </div>
         )}
+
+
 
         {/* 카운트다운 */}
         <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
@@ -308,6 +311,17 @@ function CameraClient({ characterId }: CameraClientProps) {
 
         {/* 카메라 모서리 꺾쇠 */}
         <CameraCorners />
+
+        {/* 오버랩 이미지 */}
+        <div className="absolute inset-0 z-35 pointer-events-none scale-110">
+          <Image
+            src="/overlap.png"
+            alt="overlap"
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
       </div>
 
       <div className="flex flex-col items-center justify-center z-30 border-[25px] border-[#D3B582] rounded-[60px] w-[1666px] h-[390px] mt-[100px] animate-fade-in-up">
