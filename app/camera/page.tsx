@@ -313,15 +313,17 @@ function CameraClient({ characterId }: CameraClientProps) {
         <CameraCorners />
 
         {/* 오버랩 이미지 */}
-        <div className="absolute inset-0 z-35 pointer-events-none scale-110">
-          <Image
-            src="/overlap.png"
-            alt="overlap"
-            fill
-            className="object-cover"
-            unoptimized
-          />
-        </div>
+        {!showLottieLoader && (
+          <div className="absolute inset-0 z-35 pointer-events-none scale-110">
+            <Image
+              src="/overlap.png"
+              alt="overlap"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col items-center justify-center z-30 border-[25px] border-[#D3B582] rounded-[60px] w-[1666px] h-[390px] mt-[100px] animate-fade-in-up">
