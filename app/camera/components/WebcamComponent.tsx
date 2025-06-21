@@ -14,8 +14,8 @@ export const WebcamComponent = ({ onVideoRef }: WebcamComponentProps) => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
             facingMode: "user"
           },
           audio: false
@@ -23,8 +23,18 @@ export const WebcamComponent = ({ onVideoRef }: WebcamComponentProps) => {
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          setIsWebcamActive(true);
-          onVideoRef(videoRef.current);
+          
+          // 비디오가 재생 가능한 상태가 되면 활성화
+          videoRef.current.onloadedmetadata = () => {
+            if (videoRef.current) {
+              videoRef.current.play().then(() => {
+                setIsWebcamActive(true);
+                onVideoRef(videoRef.current);
+              }).catch(() => {
+                setError("비디오 재생에 실패했습니다.");
+              });
+            }
+          };
         }
       } catch (err) {
         setError("웹캠에 접근할 수 없습니다. 권한을 확인해주세요.");

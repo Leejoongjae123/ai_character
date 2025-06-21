@@ -142,6 +142,14 @@ function CameraClient({ characterId }: CameraClientProps) {
       return;
     }
 
+    // 비디오가 재생 중인지 확인
+    if (videoElementRef.current.readyState < 2) {
+      toast("카메라가 준비되지 않았습니다", {
+        description: "잠시 후 다시 시도해주세요.",
+      });
+      return;
+    }
+
     try {
       setIsUploading(true);
       
@@ -217,14 +225,18 @@ function CameraClient({ characterId }: CameraClientProps) {
         }, 1000);
         return () => clearTimeout(timer);
       } else if (countdown === 3) {
-        // 카운트다운 3을 충분히 보여준 후 플래시 효과 시작
+        // 카운트다운 3을 충분히 보여준 후 사진 촬영 및 플래시 효과
         const timer = setTimeout(() => {
+          // 먼저 사진을 캡처하고
+          captureAndUploadPhoto();
+          
+          // 바로 플래시 효과 시작
           setShowWhiteCircle(true);
           
-          // 플래시 효과 후 사진 촬영
+          // 플래시 효과 종료
           setTimeout(() => {
-            captureAndUploadPhoto();
-          }, 200);
+            setShowWhiteCircle(false);
+          }, 300);
         }, 1000);
         
         return () => clearTimeout(timer);
@@ -253,22 +265,10 @@ function CameraClient({ characterId }: CameraClientProps) {
       </div>
 
       <div className="relative w-[1225px] aspect-square animate-fade-in-delay rounded-full overflow-hidden">
-        {/* 하얀 원 (플래시 효과) */}
-        {showWhiteCircle && !capturedPhoto && !showLottieLoader && (
-          <div className="absolute inset-0 bg-white rounded-full z-40 animate-pulse"></div>
-        )}
-
-        {/* Lottie 로딩 애니메이션 */}
-        {showLottieLoader && (
-          <div className="absolute inset-0 z-50 rounded-full overflow-hidden flex items-center justify-center">
-            <div className="w-full h-full">
-              <Lottie 
-                animationData={loaderAnimation} 
-                loop={true}
-                autoplay={true}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </div>
+        {/* 웹캠 컴포넌트 - 항상 렌더링 */}
+        {!showLottieLoader && (
+          <div className="absolute inset-0 flex items-center justify-center z-20 rounded-full overflow-hidden">
+            <WebcamComponent onVideoRef={handleVideoRef} />
           </div>
         )}
 
@@ -284,10 +284,22 @@ function CameraClient({ characterId }: CameraClientProps) {
           </div>
         )}
 
-        {/* 웹캠 컴포넌트 */}
-        {!capturedPhoto && !showLottieLoader && (
-          <div className="absolute inset-0 flex items-center justify-center z-20 rounded-full overflow-hidden">
-            <WebcamComponent onVideoRef={handleVideoRef} />
+        {/* 하얀 원 (플래시 효과) - 오버레이로 구현 */}
+        {showWhiteCircle && !capturedPhoto && !showLottieLoader && (
+          <div className="absolute inset-0 bg-white/80 rounded-full z-35 animate-flash"></div>
+        )}
+
+        {/* Lottie 로딩 애니메이션 */}
+        {showLottieLoader && (
+          <div className="absolute inset-0 z-50 rounded-full overflow-hidden flex items-center justify-center">
+            <div className="w-full h-full">
+              <Lottie 
+                animationData={loaderAnimation} 
+                loop={true}
+                autoplay={true}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
           </div>
         )}
 
