@@ -18,4 +18,5 @@ export interface Character {
   ability2_max: number | null;
   images: any | null;
   user_id: string | null;
+  picture_character: string | null;
 }

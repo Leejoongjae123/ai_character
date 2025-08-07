@@ -325,7 +325,7 @@ export default function CharacterInteraction({ character, characterId }: Charact
       {/* 캐릭터 이미지 */}
       <div className="relative w-[1100px] h-[1650px]">
         <Image
-          src={`/detail${character.order}.png`}
+          src={character.picture_character || `/detail${character.order}.png`}
           alt="role"
           fill
           className="object-contain z-0"

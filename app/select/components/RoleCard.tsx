@@ -4,6 +4,25 @@ import Image from "next/image";
 import { Card, CardTitle } from "@/components/ui/card";
 import { RoleCardProps } from "../types";
 
+// 글자 수에 따라 스페이스를 조정하는 함수
+function formatTitle(title: string): string {
+  const length = title.length;
+  
+  if (length >= 4) {
+    // 4글자 이상은 그대로
+    return title;
+  } else if (length === 3) {
+    // 3글자는 글자 사이에 1칸씩 스페이스
+    return title.split('').join(' ');
+  } else if (length === 2) {
+    // 2글자는 글자 사이에 2칸씩 스페이스
+    return title.split('').join('  ');
+  } else {
+    // 1글자는 그대로
+    return title;
+  }
+}
+
 export function RoleCard({ character, isSelected, onSelect }: RoleCardProps) {
   return (
     <div className="card-container w-[400px] h-[650px] relative">
@@ -38,7 +57,7 @@ export function RoleCard({ character, isSelected, onSelect }: RoleCardProps) {
             className="text-[#471F0D] text-[66px] font-bold text-center"
             style={{ fontFamily: "MuseumClassic, serif" }}
           >
-            {character.role}
+            {formatTitle(character.role)}
           </CardTitle>
         </div>
       </Card>

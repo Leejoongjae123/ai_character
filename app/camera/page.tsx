@@ -328,7 +328,7 @@ function CameraClient({ characterId }: CameraClientProps) {
         {!showLottieLoader && (
           <div className="absolute inset-0 z-35 pointer-events-none scale-110">
             <Image
-              src="/overlap.png"
+              src="/mask.png"
               alt="overlap"
               fill
               className="object-cover"
