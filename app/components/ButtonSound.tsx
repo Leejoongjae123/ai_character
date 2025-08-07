@@ -27,7 +27,7 @@ export function useButtonSound() {
       audioRef.current.volume = 0.8;
       // 효과음 재생
       audioRef.current.play().catch(error => {
-        console.log('효과음 재생에 실패했습니다.');
+        // 효과음 재생에 실패했습니다.
       });
     }
   };

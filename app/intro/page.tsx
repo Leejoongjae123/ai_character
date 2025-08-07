@@ -41,7 +41,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="flex flex-col items-start justify-between z-20 w-[1735px] h-[2825px] rounded-[100px] bg-[#471F0D]/10 mb-[354px] pl-[161px] pt-[149px] relative pb-[96px]">
+      <div className="relative flex flex-col items-start justify-between z-20 w-[1735px] h-[2825px] rounded-[100px] bg-[#471F0D]/10 mb-[354px] pl-[161px] pt-[149px]  pb-[96px]">
         <div className="text-[90px] font-bold text-[#471F0D]" style={{ lineHeight: '134px', letterSpacing: '-1%' }}>
           <p>
             <span>울산 외황강 끝자락에 자리한</span>
@@ -79,16 +79,21 @@ export default function Home() {
         <div>
           <Button
             onClick={handleButtonClick}
-            className="w-[1536px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
+            className="absolute bottom-[96px] left-[92.5px] w-[1550px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
           >
             수군으로 변신하기
           </Button>
         </div>
 
         <img 
-          src="/jss.png" 
+          src="/ship.png" 
           alt="jss" 
-          className="absolute bottom-0 right-0 -z-10 w-[1081px] aspect-[1081/1655]"
+          className="absolute bottom-[438px] right-[27.5px] -z-10 w-[815px] h-[1083px]"
+        />
+        <img 
+          src="/wave.png" 
+          alt="jss" 
+          className="absolute bottom-[305px] right-[92.5px] -z-10 w-[1550px] h-[405px]"
         />
       </div>
     </div>

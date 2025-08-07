@@ -21,6 +21,8 @@ export default function Home() {
         unoptimized
         onClick={handleClick}
       />
+      <img src="/logo1.png" alt="" className="absolute bottom-[132px] left-[742.8px] z-10 w-[413px] h-[81px]"/>
+      <img src="/logo2.png" alt="" className="absolute bottom-[115px] right-[742.8px] z-10 w-[204px] h-[101px]"/>
       
       <div 
         className="flex flex-col items-center justify-center z-30 mt-[190px]"
@@ -40,7 +42,7 @@ export default function Home() {
       </div>
 
       <div 
-        className="flex flex-col items-center justify-end z-30 " 
+        className="flex flex-col items-center justify-end z-30 absolute bottom-[278px]" 
         style={{ fontFamily: 'MuseumClassic, serif' }}
       >
         <div>
@@ -53,7 +55,7 @@ export default function Home() {
         </div>
         
         <div 
-          className="w-full h-[136px]text-[48px] text-black drop-shadow-lg mt-[107px] mb-[214px] font-bold"
+          className="w-full h-[136px] text-[48px] text-black drop-shadow-lg mt-[41px] font-bold"
           style={{ lineHeight: '68px', letterSpacing: '-2%' }}
         >
           <p className="text-center text-[48px]">얼굴을 인식하여 조선 수군으로 변신합니다.</p>
