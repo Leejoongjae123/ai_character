@@ -40,6 +40,18 @@ export async function POST(request: NextRequest) {
       .from('pictures')
       .getPublicUrl(fileName);
 
+    // camera_history 테이블에 URL 저장
+    const { error: historyError } = await supabase
+      .from('camera_history')
+      .insert({
+        url: urlData.publicUrl
+      });
+
+    if (historyError) {
+      // 히스토리 저장 실패해도 업로드는 성공으로 처리
+      // 로그만 남기고 계속 진행
+    }
+
     return NextResponse.json({
       success: true,
       fileName: fileName,

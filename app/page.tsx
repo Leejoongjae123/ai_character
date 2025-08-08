@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="w-full h-screen relative flex flex-col items-center justify-between">
       <Image 
-        src="/bg.webp" 
+        src="/bg.png" 
         alt="background" 
         fill 
         className="object-cover z-0" 
@@ -24,7 +24,7 @@ export default function Home() {
       <img src="/logo1.png" alt="" className="absolute bottom-[132px] left-[742.8px] z-10 w-[413px] h-[81px]"/>
       <img src="/logo2.png" alt="" className="absolute bottom-[115px] right-[742.8px] z-10 w-[204px] h-[101px]"/>
       
-      <div 
+      {/* <div 
         className="flex flex-col items-center justify-center z-30 mt-[190px]"
       >
         <div 
@@ -39,7 +39,7 @@ export default function Home() {
         >
           AI 수군 변신소
         </div>
-      </div>
+      </div> */}
 
       <div 
         className="flex flex-col items-center justify-end z-30 absolute bottom-[278px]" 
