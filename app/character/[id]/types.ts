@@ -19,4 +19,5 @@ export interface Character {
   images: any | null;
   user_id: string | null;
   picture_character: string | null;
+  prompt: string | null;
 }

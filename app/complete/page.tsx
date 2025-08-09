@@ -8,6 +8,7 @@ import { useButtonSound } from "@/app/components/ButtonSound";
 import { roles } from "@/app/const/role";
 import domtoimage from "dom-to-image-more";
 import { toast } from "@/components/ui/use-toast";
+import { MessageResponse } from "./types";
 
 function CompletePageContent() {
   const router = useRouter();
@@ -29,6 +30,7 @@ function CompletePageContent() {
   const [showQrInCard, setShowQrInCard] = useState(false); // 포토카드에 QR 표시 여부
   const [debugInfo, setDebugInfo] = useState<string[]>([]); // 디버깅 정보
   const [isPrinting, setIsPrinting] = useState(false); // 출력 상태 추가
+  const [randomMessage, setRandomMessage] = useState<string>(""); // 랜덤 메시지 상태
   const { playSound } = useButtonSound();
   const searchParams = useSearchParams();
   const characterId = searchParams.get("character");
@@ -36,6 +38,20 @@ function CompletePageContent() {
   const resultImageParam = searchParams.get("resultImage");
   const photoCardRef = useRef<HTMLDivElement>(null);
   const fullScreenRef = useRef<HTMLDivElement>(null);
+
+  // 랜덤 메시지 가져오기 함수
+  const fetchRandomMessage = async () => {
+    try {
+      const response = await fetch('/api/messages/random');
+      if (response.ok) {
+        const data: MessageResponse = await response.json();
+        setRandomMessage(data.message);
+      }
+    } catch (error) {
+      // 에러 발생 시 기본 메시지 유지
+      setRandomMessage("경상좌수영 수군 출전 준비 완료!");
+    }
+  };
 
   // 출력 상태를 localStorage에서 확인하고 복원
   useEffect(() => {
@@ -106,6 +122,11 @@ function CompletePageContent() {
       setSkill2Value(Math.floor(Math.random() * 201 + 100)); // 100~300 사이의 랜덤 값
     }
   }, [characterId]);
+
+  // 랜덤 메시지 로드
+  useEffect(() => {
+    fetchRandomMessage();
+  }, []);
 
   // 이미지 파라미터가 있으면 QR 코드 URL 업데이트 및 상태 설정
   useEffect(() => {
@@ -730,12 +751,9 @@ function CompletePageContent() {
                   fontFamily: "MuseumClassic, serif"
                 }}
               >
-                <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
-                  경상좌수영 수군
-                </p>
-                <p className="text-[95px] font-bold text-[#481F0E] leading-tight">
-                  출전 준비 완료!
-                </p>
+                <div className="text-[90px] font-bold text-[#481F0E] leading-tight text-center px-10">
+                  {randomMessage}
+                </div>
               </div>
               
                 

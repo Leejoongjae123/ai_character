@@ -344,7 +344,7 @@ export default function CharacterInteraction({ character, characterId }: Charact
                   캐릭터에 어떤 상황을 설정하고 싶으신가요?
                 </div>
                 <div className="text-[79px] font-bold text-center text-[#481F0E]/50">
-                  예: 햄버거를 먹으며 전투 지시를 하는 경상좌수사
+                  예: {character?.prompt}
                 </div>
               </>
             ) : (
