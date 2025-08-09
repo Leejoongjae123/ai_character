@@ -5,16 +5,23 @@ import { useRouter } from "next/navigation";
 import IntroMusic from "@/app/components/IntroMusic";
 import { useButtonSound } from "@/app/components/ButtonSound";
 import { useState } from "react";
+import ConsentModal from "./components/ConsentModal";
 
 export default function Home() {
   const router = useRouter();
   const { playSound } = useButtonSound();
+  const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
 
   const handleButtonClick = () => {
     // 효과음 재생
     playSound();
     
-    // 효과음 재생 후 페이지 이동 (약간의 지연 추가)
+    // 동의서 모달 열기
+    setIsConsentModalOpen(true);
+  };
+
+  const handleConsentComplete = () => {
+    // 동의 완료 후 페이지 이동
     setTimeout(() => {
       router.push("/select");
     }, 300); // 300ms 후 페이지 이동
@@ -96,6 +103,13 @@ export default function Home() {
           className="absolute bottom-[305px] right-[92.5px] -z-10 w-[1550px] h-[405px]"
         />
       </div>
+
+      {/* 동의서 모달 */}
+      <ConsentModal 
+        isOpen={isConsentModalOpen}
+        onOpenChange={setIsConsentModalOpen}
+        onConsent={handleConsentComplete}
+      />
     </div>
   );
 }
