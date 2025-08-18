@@ -22,6 +22,7 @@ export default function QRCodeComponent({
     const generateQR = async () => {
       try {
         if (value) {
+          // 먼저 일반적인 QR 코드 생성
           const dataUrl = await QRCode.toDataURL(value, {
             width: size,
             margin: 2,
@@ -30,8 +31,39 @@ export default function QRCodeComponent({
               light: '#FFFFFF'
             }
           });
-          setQrDataUrl(dataUrl);
-          setIsImageLoaded(false); // 새 QR 코드 생성 시 로드 상태 초기화
+          
+          // Canvas를 사용해서 흰색 배경을 투명하게 변환
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx!.drawImage(img, 0, 0);
+            
+            const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            // 흰색 픽셀을 투명하게 변환
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              
+              // 흰색이나 거의 흰색인 픽셀을 투명하게 만듦
+              if (r > 240 && g > 240 && b > 240) {
+                data[i + 3] = 0; // 알파 값을 0으로 설정 (투명)
+              }
+            }
+            
+            ctx!.putImageData(imageData, 0, 0);
+            const transparentDataUrl = canvas.toDataURL('image/png');
+            setQrDataUrl(transparentDataUrl);
+            setIsImageLoaded(false);
+          };
+          
+          img.src = dataUrl;
         }
       } catch (error) {
         console.log('QR 코드 생성 오류:', error);

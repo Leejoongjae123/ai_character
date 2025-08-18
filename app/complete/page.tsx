@@ -5,10 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import QRCodeComponent from "@/components/QRCode";
 import { useButtonSound } from "@/app/components/ButtonSound";
-import { roles } from "@/app/const/role";
 import domtoimage from "dom-to-image-more";
 import { toast } from "@/components/ui/use-toast";
-import { MessageResponse } from "./types";
+import { MessageResponse, Character, CharacterResponse } from "./types";
 
 function CompletePageContent() {
   const router = useRouter();
@@ -19,7 +18,7 @@ function CompletePageContent() {
   const [showCharacter, setShowCharacter] = useState(false);
   const [skill1Value, setSkill1Value] = useState(0);
   const [skill2Value, setSkill2Value] = useState(0);
-  const [character, setCharacter] = useState<any>(null);
+  const [character, setCharacter] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState(""); // QR 코드에 표시될 URL
   const [uploadUrl, setUploadUrl] = useState(""); // presigned 업로드 URL
@@ -36,6 +35,8 @@ function CompletePageContent() {
   const characterId = searchParams.get("character");
   const imageParam = searchParams.get("image");
   const resultImageParam = searchParams.get("resultImage");
+  const backgroundImageParam = searchParams.get("backgroundImage");
+  const [backgroundRemovedImageUrl, setBackgroundRemovedImageUrl] = useState<string>("");
   const photoCardRef = useRef<HTMLDivElement>(null);
   const fullScreenRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +51,42 @@ function CompletePageContent() {
     } catch (error) {
       // 에러 발생 시 기본 메시지 유지
       setRandomMessage("경상좌수영 수군 출전 준비 완료!");
+    }
+  };
+
+  // Character 데이터 가져오기 함수
+  const fetchCharacter = async (characterId: string) => {
+    try {
+      const response = await fetch(`/api/characters/${characterId}`);
+      if (response.ok) {
+        const data: CharacterResponse = await response.json();
+        setCharacter(data.character);
+        
+        // 스킬 값 설정 (min과 max 사이의 랜덤 값)
+        if (data.character.ability1_min && data.character.ability1_max) {
+          const randomSkill1 = Math.floor(
+            Math.random() * (data.character.ability1_max - data.character.ability1_min + 1) + 
+            data.character.ability1_min
+          );
+          setSkill1Value(randomSkill1);
+        }
+        
+        if (data.character.ability2_min && data.character.ability2_max) {
+          const randomSkill2 = Math.floor(
+            Math.random() * (data.character.ability2_max - data.character.ability2_min + 1) + 
+            data.character.ability2_min
+          );
+          setSkill2Value(randomSkill2);
+        }
+      } else {
+        // API 실패 시 기본값 설정
+        setSkill1Value(Math.floor(Math.random() * 201 + 100)); 
+        setSkill2Value(Math.floor(Math.random() * 201 + 100)); 
+      }
+    } catch (error) {
+      // 에러 발생 시 기본값 설정
+      setSkill1Value(Math.floor(Math.random() * 201 + 100)); 
+      setSkill2Value(Math.floor(Math.random() * 201 + 100)); 
     }
   };
 
@@ -90,36 +127,14 @@ function CompletePageContent() {
     setDebugInfo(prev => [...prev.slice(-4), debugMessage]); // 최근 5개만 유지
   }, []);
 
-  // 컴포넌트 마운트 시 역할 정보 및 랜덤 값 생성
+  // 컴포넌트 마운트 시 캐릭터 정보 로드
   useEffect(() => {
     if (characterId) {
-      const selectedCharacter = roles.find(role => role.id === parseInt(characterId));
-      
-      if (selectedCharacter) {
-        setCharacter(selectedCharacter);
-        
-        // 스킬 값 설정 (min과 max 사이의 랜덤 값)
-        const randomSkill1 = Math.floor(
-          Math.random() * (selectedCharacter.skill1.max - selectedCharacter.skill1.min + 1) + 
-          selectedCharacter.skill1.min
-        );
-        
-        const randomSkill2 = Math.floor(
-          Math.random() * (selectedCharacter.skill2.max - selectedCharacter.skill2.min + 1) + 
-          selectedCharacter.skill2.min
-        );
-        
-        setSkill1Value(randomSkill1);
-        setSkill2Value(randomSkill2);
-      } else {
-        // 기본값 설정 (캐릭터를 찾지 못한 경우)
-        setSkill1Value(Math.floor(Math.random() * 201 + 100)); // 100~300 사이의 랜덤 값
-        setSkill2Value(Math.floor(Math.random() * 201 + 100)); // 100~300 사이의 랜덤 값
-      }
+      fetchCharacter(characterId);
     } else {
       // characterId가 없는 경우 기본값 설정
-      setSkill1Value(Math.floor(Math.random() * 201 + 100)); // 100~300 사이의 랜덤 값
-      setSkill2Value(Math.floor(Math.random() * 201 + 100)); // 100~300 사이의 랜덤 값
+      setSkill1Value(Math.floor(Math.random() * 201 + 100)); 
+      setSkill2Value(Math.floor(Math.random() * 201 + 100)); 
     }
   }, [characterId]);
 
@@ -128,26 +143,77 @@ function CompletePageContent() {
     fetchRandomMessage();
   }, []);
 
+  // 이미지 파라미터에서 background_removed_image_url 설정
+  useEffect(() => {
+    // backgroundImageParam이 있으면 직접 사용 (새로운 방식)
+    if (backgroundImageParam) {
+      const decodedUrl = decodeURIComponent(backgroundImageParam);
+      addDebugInfo(`background_removed_image_url 직접 사용: ${decodedUrl}`);
+      setBackgroundRemovedImageUrl(decodedUrl);
+    } 
+    // 기존 resultImageParam 처리 (하위 호환성)
+    else if (resultImageParam) {
+      try {
+        // resultImageParam이 JSON 문자열인 경우 파싱
+        const apiResponse = JSON.parse(decodeURIComponent(resultImageParam));
+        console.log("apiResponse:", apiResponse);
+        
+        // API 응답 구조에 따라 background_removed_image_url 추출
+        let backgroundImageUrl = '';
+        
+        if (apiResponse.result && apiResponse.result.background_removed_image_url) {
+          // camera 페이지에서 { result: resultData } 형태로 넘어온 경우
+          backgroundImageUrl = apiResponse.result.background_removed_image_url;
+          addDebugInfo(`background_removed_image_url 추출 (nested): ${backgroundImageUrl}`);
+        } else if (apiResponse.background_removed_image_url) {
+          // API 응답이 직접 넘어온 경우
+          backgroundImageUrl = apiResponse.background_removed_image_url;
+          addDebugInfo(`background_removed_image_url 추출 (direct): ${backgroundImageUrl}`);
+        }
+        
+        if (backgroundImageUrl) {
+          setBackgroundRemovedImageUrl(backgroundImageUrl);
+        } else {
+          addDebugInfo(`background_removed_image_url을 찾을 수 없음`);
+          // 대안으로 result_image_url 시도
+          if (apiResponse.result && apiResponse.result.result_image_url) {
+            setBackgroundRemovedImageUrl(apiResponse.result.result_image_url);
+            addDebugInfo(`대안으로 result_image_url 사용: ${apiResponse.result.result_image_url}`);
+          } else if (apiResponse.result_image_url) {
+            setBackgroundRemovedImageUrl(apiResponse.result_image_url);
+            addDebugInfo(`대안으로 result_image_url 사용 (direct): ${apiResponse.result_image_url}`);
+          }
+        }
+      } catch (error) {
+        // JSON 파싱 실패 시 원본 URL을 그대로 사용
+        addDebugInfo(`JSON 파싱 실패, 원본 URL 사용: ${resultImageParam}`);
+        setBackgroundRemovedImageUrl(resultImageParam);
+      }
+    }
+  }, [backgroundImageParam, resultImageParam, addDebugInfo]);
+
   // 이미지 파라미터가 있으면 QR 코드 URL 업데이트 및 상태 설정
   useEffect(() => {
     if (imageParam) {
       addDebugInfo(`이미지 파라미터 감지: ${imageParam}`);
       setQrCodeUrl(imageParam);
       setShowQrInCard(true);
-    } else if (resultImageParam) {
-      addDebugInfo(`결과 이미지 파라미터 감지: ${resultImageParam}`);
-      // resultImageParam이 있어도 QR 코드 URL은 설정하지 않음 (새로 생성해야 함)
+    } else if (backgroundImageParam || resultImageParam) {
+      addDebugInfo(`배경 이미지 또는 결과 이미지 파라미터 감지: ${backgroundImageParam || resultImageParam}`);
+      // backgroundImageParam 또는 resultImageParam이 있어도 QR 코드 URL은 설정하지 않음 (새로 생성해야 함)
       setShowQrInCard(true);
       // isImageUploadComplete를 true로 설정하지 않음 - 새로운 포토카드를 업로드해야 함
     }
-  }, [imageParam, resultImageParam]);
+  }, [imageParam, backgroundImageParam, resultImageParam]);
 
   // 페이지 로드 시 이미지가 아직 캡처되지 않았고 이미지 파라미터도 없는 경우 자동으로 프로세스 시작
   useEffect(() => {
     const autoStart = async () => {
       // 이미 프로세스가 시작되었거나 이미지 파라미터가 있는 경우 실행하지 않음
-      // resultImageParam이 있는 경우에는 새로운 포토카드를 생성해야 하므로 프로세스 실행
-      if (isImageUploadComplete || imageParam) return;
+      // backgroundImageParam 또는 resultImageParam이 있는 경우에는 새로운 포토카드를 생성해야 하므로 프로세스 실행
+      if (isImageUploadComplete || imageParam) {
+        return;
+      }
       
       addDebugInfo('자동 프로세스 시작 준비');
       // 렌더링이 완전히 끝난 후 실행하기 위해 충분한 지연 추가
@@ -160,11 +226,11 @@ function CompletePageContent() {
     };
     
     // DOM이 준비된 후 실행
-    // resultImageParam이 있어도 새로운 포토카드를 생성해야 하므로 조건에서 제외
+    // backgroundImageParam 또는 resultImageParam이 있어도 새로운 포토카드를 생성해야 하므로 조건에서 제외
     if (photoCardRef.current && !isImageUploadComplete && !imageParam) {
       autoStart();
     }
-  }, [isImageUploadComplete, imageParam]); // resultImageParam 의존성 제거
+  }, [isImageUploadComplete, imageParam]); // backgroundImageParam, resultImageParam 의존성 제거
 
   // 2단계: 이미지 캡처 및 업로드
   const captureAndUploadImage = useCallback(async () => {
@@ -665,6 +731,24 @@ function CompletePageContent() {
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
+  console.log('character:', character)
+
+  // role 텍스트에 스페이스를 추가하는 함수
+  const formatRoleText = (role: string) => {
+    if (!role) {
+      return "";
+    }
+    
+    if (role.length === 2) {
+      // 2글자는 3칸 스페이스로 띄우기
+      return role.split('').join('   ');
+    } else if (role.length === 3) {
+      // 3글자는 2칸 스페이스로 띄우기
+      return role.split('').join('  ');
+    }
+    // 그 외는 그대로
+    return role;
+  };
 
   return (
     <div ref={fullScreenRef} className="w-full h-screen relative flex flex-col items-center justify-between">
@@ -692,20 +776,43 @@ function CompletePageContent() {
 
       <div 
         ref={photoCardRef}
-        className="photo-card w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-between bg-[url('/bg2_cropped.webp')] bg-cover bg-center rounded-[50px]"
+        className="photo-card w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-between bg-[#F7D5AA] rounded-[50px]"
       >
         <div
-          className="text-[170px] font-bold text-center text-[#481F0E] mt-[60px]"
+          className="text-[170px] font-bold text-center text-[#481F0E] mt-[60px] role-text relative"
           style={{ fontFamily: "MuseumClassic, serif" }}
         >
-          {character?.title || "경상좌수사"}
+          {/* title_deco.png 이미지를 글자 중간에 배치 */}
+          <img
+            src="/title_img.png"
+            alt="title decoration"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-0 flex-shrink-0"
+            style={{
+              width: '1226px',
+              height: '149px',
+              minWidth: '1226px',
+              minHeight: '149px',
+              maxWidth: '1226px',
+              maxHeight: '149px'
+            }}
+          />
+          <span 
+            className="relative z-10"
+            style={{ 
+              fontFamily: "Galmuri7", 
+              fontSize: "189px",
+              letterSpacing: "-5%" 
+            }}
+          >
+            {formatRoleText(character?.role || "")}
+          </span>
         </div>
         
         <div 
           className="w-[1368px] h-[2070px] border-[10px] border-black z-20 rounded-[50px] mb-[100px] relative overflow-hidden flex flex-col items-center justify-end"
         >
           <div 
-            className="qrcode absolute bottom-0 right-0 w-[460px] h-[460px] bg-white z-30 border-l-[10px] border-t-[10px] border-black rounded-tl-[50px] flex items-center justify-center"
+            className="qrcode absolute bottom-0 right-0 w-[460px] h-[460px] bg-[#F7D5AA] z-30 border-[21px] border-black rounded-tl-[50px] flex items-center justify-center "
           >
             {qrCodeUrl ? (
               <QRCodeComponent 
@@ -722,12 +829,17 @@ function CompletePageContent() {
           </div>
           
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 border-[21px] border-black"
+            style={{
+              backgroundImage: `url("/card_bg.png")`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
           >
             <img
-              src={resultImageParam || character?.result || ""}
-              alt={character?.title || "role1"}
-              
+              src={backgroundRemovedImageUrl || character?.picture_character || ""}
+              alt={character?.role || "character"}
               className="object-cover w-[1348px] h-[2050px]"
             />
           </div>
@@ -735,7 +847,7 @@ function CompletePageContent() {
           <div className="relative w-full h-[290px]">
             {/* 검정색 윗 테두리를 가진 겹친 div */}
             <div 
-              className="absolute top-0 left-0 w-full h-[290px] border-t-[10px] border-black z-25"
+              className="absolute top-0 left-0 w-full h-[290px] border-[21px] border-black z-25"
             />
 
             <div 
@@ -751,42 +863,70 @@ function CompletePageContent() {
                   fontFamily: "MuseumClassic, serif"
                 }}
               >
-                <div className="text-[90px] font-bold text-[#481F0E] leading-tight text-center px-10">
+                <div 
+                  className="text-[95px]  text-[#000000] leading-tight text-center px-10"
+                  style={{ fontFamily: "DNFBitBitv2, monospace" }}
+                >
                   {randomMessage}
                 </div>
               </div>
               
                 
 
-              <div
-                className="flex-1 bg-[#E4BE50] flex flex-col items-center justify-center py-[100px] gap-y-0 border-none"
-                style={{ fontFamily: "MuseumClassic, serif" }}
-              >
-                <p className="text-[69px] font-bold text-black leading-[150%] border-none">
-                  {character?.skill1?.name || "지도력"}
-                </p>
-                <p className="text-[134px] font-bold text-black leading-none border-none">
-                  {skill1Value} 
-                </p>
-              </div>
-              
-              {/* 구분선 */}
-              <div className="flex flex-col items-center justify-center bg-[#E4BE50] border-none">
-                <div className="w-[10px] h-[250px] bg-black my-[20px]"></div>
-              </div>
+              {/* 통합된 ability 영역 */}
+              <div className="flex-1 flex flex-row border-none relative">
+                {/* 왼쪽 ability1 영역 */}
+                <div className="flex-1 flex flex-col border-none">
+                  {/* 상단 - ability1 */}
+                  <div
+                    className="flex-1 bg-[#0068B7] flex flex-col items-center justify-center border-none"
+                    style={{ fontFamily: "DNFBitBitv2, monospace" }}
+                  >
+                    <p style={{ fontFamily: "DNFBitBitv2, monospace" }} className="text-[69px] text-white leading-[150%] border-none">
+                      {character?.ability1 || "지도력"}
+                    </p>
+                  </div>
+                  
+                  {/* 하단 - skill1Value */}
+                  <div
+                    className="flex-1 bg-[#BAE3F9] flex flex-col items-center justify-center border-none"
+                    style={{ fontFamily: "DNFBitBitv2, monospace" }}
+                  >
+                    <p style={{ fontFamily: "DNFBitBitv2, monospace" }} className="text-[100px] text-black leading-none border-none">
+                      {skill1Value} 
+                    </p>
+                  </div>
+                </div>
 
-              <div
-                className="flex-1 bg-[#E4BE50] flex flex-col items-center justify-center py-[100px] gap-y-0 border-none"
-                style={{ fontFamily: "MuseumClassic, serif" }}
-              >
-                <p className="text-[69px] font-bold text-black leading-[150%] border-none">
-                  {character?.skill2?.name || "결단력"}
-                </p>
-                <p className="text-[134px] font-bold text-black leading-none border-none">
-                  {skill2Value}
-                </p>
+                {/* 오른쪽 ability2 영역 */}
+                <div className="flex-1 flex flex-col border-none">
+                  {/* 상단 - ability2 */}
+                  <div
+                    className="flex-1 bg-[#0068B7] flex flex-col items-center justify-center border-none"
+                    style={{ fontFamily: "DNFBitBitv2, monospace" }}
+                  >
+                    <p style={{ fontFamily: "DNFBitBitv2, monospace" }} className="text-[69px] text-white leading-[150%] border-none">
+                      {character?.ability2 || "결단력"}
+                    </p>
+                  </div>
+                  
+                  {/* 하단 - skill2Value */}
+                  <div
+                    className="flex-1 bg-[#BAE3F9] flex flex-col items-center justify-center border-none"
+                    style={{ fontFamily: "DNFBitBitv2, monospace" }}
+                  >
+                    <p style={{ fontFamily: "DNFBitBitv2, monospace" }} className="text-[100px] text-black leading-none border-none">
+                      {skill2Value}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 중앙 구분선 - absolute 포지셔닝 */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10"> 
+                  <div className="w-[21px] bg-black h-[240px]"></div>
+                </div>
               </div>
-              <div className="w-[460px]"></div>
+              <div className="w-[460px] "></div>
             </div>
           </div>
         </div>

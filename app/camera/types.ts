@@ -1,13 +1,14 @@
 export interface PageProps {
-  searchParams: Promise<{ character?: string }>;
+  searchParams: Promise<{ character?: string; situation?: string }>;
 }
 
 export interface CameraPageContentProps {
-  searchParams: Promise<{ character?: string }>;
+  searchParams: Promise<{ character?: string; situation?: string }>;
 }
 
 export interface CameraClientProps {
   characterId?: string;
+  situation?: string;
 }
 
 export interface WebcamComponentProps {

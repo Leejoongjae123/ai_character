@@ -26,6 +26,24 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Galmuri7';
+  src: url('/fonts/Galmuri7.woff2') format('woff2'),
+       url('/fonts/Galmuri7.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DNFBitBitv2';
+  src: url('/fonts/DNFBitBitv2.ttf') format('truetype'),
+       url('/fonts/DNFBitBitv2.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   font-family: 'Noto Sans KR', sans-serif;
 }
@@ -38,5 +56,15 @@ body {
 /* MuseumClassic 폰트 클래스 */
 .font-museum-classic {
   font-family: 'MuseumClassic', serif;
+}
+
+/* Galmuri7 폰트 클래스 */
+.font-galmuri7 {
+  font-family: 'Galmuri7', monospace;
+}
+
+/* DNFBitBitv2 폰트 클래스 */
+.font-dnf-bit {
+  font-family: 'DNFBitBitv2', monospace;
 }
 

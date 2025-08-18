@@ -10,6 +10,7 @@ import { useButtonSound } from "@/app/components/ButtonSound";
 import { toast } from "sonner";
 import { capturePhotoFromVideo, generatePhotoFileName, blobToDataURL } from "@/utils/camera";
 import { requestFaceSwap, pollJobStatus } from "@/utils/faceSwap";
+import { saveImageRecord, pollForImageResult, requestImageProcessing } from "@/utils/imagePolling";
 import { WebcamComponent } from "./components/WebcamComponent";
 import { CameraCorners } from "./components/CameraCorners";
 import { ProcessingStatus } from "./components/ProcessingStatus";
@@ -27,11 +28,12 @@ export default function Page({ searchParams }: PageProps) {
 function CameraPageContent({ searchParams }: CameraPageContentProps) {
   const resolvedSearchParams = use(searchParams);
   const characterId = resolvedSearchParams.character;
+  const situation = resolvedSearchParams.situation;
 
-  return <CameraClient characterId={characterId} />;
+  return <CameraClient characterId={characterId} situation={situation} />;
 }
 
-function CameraClient({ characterId }: CameraClientProps) {
+function CameraClient({ characterId, situation }: CameraClientProps) {
   const router = useRouter();
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [countdown, setCountdown] = useState(1);
@@ -94,38 +96,101 @@ function CameraClient({ characterId }: CameraClientProps) {
 
     try {
       setShowLottieLoader(true);
-      setProcessingMessage("얼굴 스왑 요청중...");
+      setProcessingMessage("이미지 저장 중...");
 
-      // 1. 얼굴 스왑 요청
-      const faceSwapResult = await requestFaceSwap(uploadedPhotoUrl, characterId);
+      // 1. image 테이블에 job_id와 picture_camera 저장
+      const saveResult = await saveImageRecord(uploadedPhotoUrl);
       
-      if (!faceSwapResult.success || !faceSwapResult.jobId) {
-        toast("얼굴 스왑 요청 실패", {
-          description: faceSwapResult.error || "얼굴 스왑 요청에 실패했습니다.",
+      if (!saveResult.success || !saveResult.jobId) {
+        toast("이미지 저장 실패", {
+          description: saveResult.error || "이미지 저장에 실패했습니다.",
         });
         setShowLottieLoader(false);
         return;
       }
 
-      setProcessingMessage("이미지 생성중...");
+      setProcessingMessage("이미지 생성 중...");
 
-      // 2. 작업 상태 폴링
-      const finalResult = await pollJobStatus(
-        faceSwapResult.jobId,
-        (status) => {
-          // 진행 상황 업데이트
-          if (status.status === 'processing') {
-            setProcessingMessage("이미지 생성중...");
+      // 2. AWS API에 이미지 처리 요청 전송
+      const awsResult = await requestImageProcessing(
+        uploadedPhotoUrl,
+        characterId,
+        situation || "변신", // situation이 없으면 기본값 사용
+        saveResult.jobId
+      );
+
+      if (!awsResult.success) {
+        toast("AWS API 요청 실패", {
+          description: awsResult.error || "이미지 처리 요청에 실패했습니다.",
+        });
+        setShowLottieLoader(false);
+        return;
+      }
+
+      setProcessingMessage("결과 대기 중...");
+
+      // 3. result 값이 들어올 때까지 polling
+      const pollingResult = await pollForImageResult(
+        saveResult.jobId,
+        {
+          maxAttempts: 60, // 5분 대기
+          intervalMs: 5000, // 5초마다 체크
+          onProgress: (attempt, maxAttempts) => {
+            const remainingTime = Math.ceil((maxAttempts - attempt) * 5 / 60);
+            setProcessingMessage(`결과 대기 중... (약 ${remainingTime}분 남음)`);
           }
         }
       );
 
-      if (finalResult.image_url) {
-        // 3. 완료 페이지로 이동
-        router.push(`/complete?character=${characterId}&resultImage=${encodeURIComponent(finalResult.image_url)}`);
+      console.log('[Camera] Polling completed:', {
+        success: pollingResult.success,
+        hasData: !!pollingResult.data,
+        hasResult: !!pollingResult.data?.result,
+        result: pollingResult.data?.result
+      });
+
+      if (pollingResult.success && pollingResult.data?.result) {
+        // 3. API 응답 데이터에서 background_removed_image_url 추출
+        const resultData = pollingResult.data.result;
+        
+        console.log('[Camera] Processing result data:', {
+          resultDataType: typeof resultData,
+          resultData: resultData
+        });
+
+        try {
+          // background_removed_image_url 추출
+          let backgroundImageUrl = '';
+          
+          if (resultData.background_removed_image_url) {
+            backgroundImageUrl = resultData.background_removed_image_url;
+          } else if (resultData.result_image_url) {
+            // 대안으로 result_image_url 사용
+            backgroundImageUrl = resultData.result_image_url;
+          }
+          
+          console.log('[Camera] Extracted background_removed_image_url:', backgroundImageUrl);
+          
+          if (backgroundImageUrl) {
+            console.log('[Camera] Navigating to complete page with background image URL...');
+            router.push(`/complete?character=${characterId}&backgroundImage=${encodeURIComponent(backgroundImageUrl)}&jobId=${saveResult.jobId}`);
+          } else {
+            toast("이미지 URL을 찾을 수 없습니다", {
+              description: "생성된 이미지 URL을 찾을 수 없습니다.",
+            });
+            setShowLottieLoader(false);
+          }
+        } catch (error) {
+          console.log('[Camera] Failed to process result data:', error);
+          toast("결과 데이터 처리 실패", {
+            description: "결과 데이터를 처리하는데 실패했습니다.",
+          });
+          setShowLottieLoader(false);
+        }
       } else {
+        console.log('[Camera] Polling failed:', pollingResult.error);
         toast("이미지 생성 실패", {
-          description: "이미지 생성에 실패했습니다.",
+          description: pollingResult.error || "이미지 생성에 실패했습니다.",
         });
         setShowLottieLoader(false);
       }
