@@ -137,7 +137,7 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
           intervalMs: 5000, // 5초마다 체크
           onProgress: (attempt, maxAttempts) => {
             const remainingTime = Math.ceil((maxAttempts - attempt) * 5 / 60);
-            setProcessingMessage(`결과 대기 중... (약 ${remainingTime}분 남음)`);
+            setProcessingMessage(`결과 대기 중... `);
           }
         }
       );
