@@ -952,7 +952,7 @@ function CompletePageContent() {
             <div>
               <Button
                 onClick={handleTransform}
-                className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
+                className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] rounded-[60px] font-bold z-20"
               >
                 출력하기
               </Button>
@@ -961,7 +961,7 @@ function CompletePageContent() {
             <div>
               <Button
                 onClick={handleGoHome}
-                className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50] border-5 border-[#471F0D] rounded-[60px] font-bold z-20"
+                className="w-[752px] h-[281px] text-[128px] text-[#451F0D] bg-[#E4BE50]  rounded-[60px] font-bold z-20"
               >
                 처음으로
               </Button>
