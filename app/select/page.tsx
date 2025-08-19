@@ -53,7 +53,7 @@ export default async function SelectPage() {
       </div>
 
       {/* 동적 역할 선택 컴포넌트 */}
-      <RoleSelection characters={characters} />
+      <RoleSelection  characters={characters} />
     </div>
   );
 }

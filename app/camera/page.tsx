@@ -329,7 +329,7 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
         </div>
       </div>
 
-      <div className="relative w-[1225px] aspect-square animate-fade-in-delay rounded-full overflow-hidden">
+      <div className="absolute top-[949px] w-[1225px] aspect-square animate-fade-in-delay rounded-full overflow-hidden">
         {/* 웹캠 컴포넌트 - 항상 렌더링 */}
         {!showLottieLoader && (
           <div className="absolute inset-0 flex items-center justify-center z-20 rounded-full overflow-hidden">
@@ -391,7 +391,7 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
 
         {/* 오버랩 이미지 */}
         {!showLottieLoader && (
-          <div className="absolute inset-0 z-35 pointer-events-none scale-110">
+          <div className="absolute inset-0 z-35 pointer-events-none scale-110 mt-[100px]">
             <Image
               src="/mask.png"
               alt="overlap"
@@ -403,7 +403,7 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
         )}
       </div>
 
-      <div className="flex flex-col items-center justify-center z-30 border-[25px] border-[#D3B582] rounded-[60px] w-[1666px] h-[390px] mt-[100px] animate-fade-in-up">
+      <div className="absolute bottom-[832px] left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center z-30 border-[25px] border-[#D3B582] rounded-[60px] w-[1666px] h-[390px] animate-fade-in-up">
         {showLottieLoader ? (
           <div className="text-[120px] font-bold text-center text-[#481F0E]">
             {processingMessage}

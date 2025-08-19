@@ -343,13 +343,19 @@ export default function CharacterInteraction({ character, characterId }: Charact
                 <div className="text-[79px] font-bold text-center text-[#481F0E]">
                   캐릭터에 어떤 상황을 설정하고 싶으신가요?
                 </div>
-                <div className="text-[79px] font-bold text-center text-[#481F0E]/50">
+                <div 
+                  className="text-[79px] font-bold text-center text-[#481F0E]/50"
+                  style={{ letterSpacing: "-0.03em" }}
+                >
                   예: {character?.prompt}
                 </div>
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <div className="text-[100px] font-bold text-center text-[#481F0E]">
+                <div 
+                  className="text-[79px] font-bold text-center text-[#481F0E]"
+                  style={{ letterSpacing: "-0.03em" }}
+                >
                   {situation}
                 </div>
               </div>
@@ -388,7 +394,7 @@ export default function CharacterInteraction({ character, characterId }: Charact
                 : "text-[#451F0D]/50 bg-[#E4BE50]/50 border-[#471F0D]/50 cursor-not-allowed"
             }`}
           >
-            입력완료
+            시작하기
           </Button>
         </div>
 
