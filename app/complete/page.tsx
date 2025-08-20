@@ -1099,7 +1099,7 @@ function CompletePageContent() {
         )}
         
         {/* 이미지 다운로드 버튼 - 항상 표시 */}
-        {isImageUploadComplete && (
+        {/* {isImageUploadComplete && (
           <div className="mt-8">
             <Button
               onClick={handleDownloadImage}
@@ -1108,7 +1108,7 @@ function CompletePageContent() {
               이미지 저장
             </Button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
