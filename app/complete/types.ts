@@ -25,6 +25,7 @@ export interface Character {
   picture_character: string | null;
   picture_cartoon: any | null;
   prompt: string | null;
+  star_count: number | null;
 }
 
 export interface CharacterResponse {

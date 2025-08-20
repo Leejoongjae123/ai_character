@@ -249,24 +249,24 @@ function CompletePageContent() {
       // 렌더링이 완전히 끝날 때까지 대기
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      addDebugInfo('DOM to Image 변환 시작');
-      // dom-to-image-more를 사용해서 이미지 생성
+      addDebugInfo('Canvas 변환 시작');
+      // dom-to-image를 사용해서 이미지 생성
       const dataUrl = await domtoimage.toPng(targetElement, {
-        quality: 1.0,
-        bgcolor: '#ffffff',
+        bgcolor: '#F9D5AA',
         width: 1594,
         height: 2543,
+        quality: 1.0,
         style: {
           transform: 'scale(1)',
-          transformOrigin: 'top left'
-        },
-        // 이미지 캡처 품질 향상을 위한 옵션
-        cacheBust: true
+          transformOrigin: 'top left',
+          width: '1594px',
+          height: '2543px'
+        }
       });
       
       addDebugInfo('이미지 변환 완료, 업로드 준비');
       
-      // dataURL을 Blob으로 변환
+      // DataURL을 Blob으로 변환
       const response = await fetch(dataUrl);
       const blob = await response.blob();
       
@@ -476,6 +476,95 @@ function CompletePageContent() {
   // 디버깅을 위한 상태 표시
   const getStatusMessage = () => {
     return isImageUploadComplete ? '완료!' : '이미지 업로드중...';
+  };
+
+  // 이미지 다운로드 기능 추가 - html2canvas 개선된 버전
+  const handleDownloadImage = async () => {
+    try {
+      playSound();
+      
+      const targetElement = photoCardRef.current;
+      if (!targetElement) {
+        toast({
+          title: "오류",
+          description: "이미지를 생성할 수 없습니다.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 폰트 로딩과 렌더링이 완전히 끝날 때까지 충분히 대기
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // 추가로 폰트 로딩 완료 확인
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      
+      // 추가 대기 시간
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // dom-to-image를 사용해서 보이는 그대로 이미지 생성
+      const dataUrl = await domtoimage.toPng(targetElement, {
+        bgcolor: '#F9D5AA',
+        width: 1594,
+        height: 2543,
+        quality: 1.0,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+          width: '1594px',
+          height: '2543px'
+        },
+        filter: (node) => {
+          // 불필요한 요소 제외
+          const element = node as Element;
+          if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE') {
+            return false;
+          }
+          // img 요소의 경우 border 스타일 제거
+          if (element.tagName === 'IMG') {
+            const imgElement = element as HTMLImageElement;
+            if (imgElement.style) {
+              imgElement.style.border = 'none';
+              imgElement.style.outline = 'none';
+              imgElement.style.boxShadow = 'none';
+            }
+          }
+          return true;
+        }
+      });
+
+      // DataURL을 Blob으로 변환
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+
+      // 다운로드 링크 생성
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `포토카드_${character?.role || 'character'}_${new Date().getTime()}.png`;
+      link.href = url;
+      
+      // 다운로드 실행
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // URL 정리
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "다운로드 완료",
+        description: "포토카드 이미지가 다운로드되었습니다.",
+      });
+
+    } catch (error) {
+      toast({
+        title: "오류",
+        description: "이미지 다운로드 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   // 프린트 기능 추가 - 양면 인쇄
@@ -776,7 +865,8 @@ function CompletePageContent() {
 
       <div 
         ref={photoCardRef}
-        className="photo-card w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-between bg-[#F7D5AA] rounded-[50px]"
+        className="photo-card w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-between bg-[#F9D5AA]"
+        style={{ backgroundColor: '#F9D5AA' }}
       >
         <div
           className="text-[170px] font-bold text-center text-[#481F0E] mt-[60px] role-text relative"
@@ -793,15 +883,23 @@ function CompletePageContent() {
               minWidth: '1226px',
               minHeight: '149px',
               maxWidth: '1226px',
-              maxHeight: '149px'
+              maxHeight: '149px',
+              border: 'none',
+              outline: 'none',
+              boxShadow: 'none',
+              backgroundColor: 'transparent'
             }}
           />
           <span 
-            className="relative z-10"
+            className="relative z-10 text-black role-name"
             style={{ 
               fontFamily: "Galmuri7", 
               fontSize: "189px",
-              letterSpacing: "-5%" 
+              letterSpacing: "-5%",
+              border: 'none',
+              outline: 'none',
+              boxShadow: 'none',
+              backgroundColor: 'transparent'
             }}
           >
             {formatRoleText(character?.role || "")}
@@ -811,8 +909,31 @@ function CompletePageContent() {
         <div 
           className="w-[1368px] h-[2070px] border-[10px] border-black z-20 rounded-[50px] mb-[100px] relative overflow-hidden flex flex-col items-center justify-end"
         >
+          {/* 별 표시 영역 - QR 코드 위쪽에 세로로 배치 */}
+          {character?.star_count && character.star_count > 0 && (
+            <div className="absolute bottom-[480px] right-[50px] z-30 flex flex-col items-center gap-2">
+              {Array.from({ length: character.star_count }, (_, index) => (
+                <div
+                  key={index}
+                  className="w-[136px] h-[136px] relative"
+                  style={{
+                    backgroundImage: 'url(/star.png)',
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    boxShadow: 'none'
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          
           <div 
-            className="qrcode absolute bottom-0 right-0 w-[460px] h-[460px] bg-[#F7D5AA] z-30 border-[21px] border-black rounded-tl-[50px] flex items-center justify-center "
+            className="qrcode absolute bottom-0 right-0 w-[460px] h-[460px] bg-[#F9D5AA] z-30 border-[21px] border-black rounded-tl-[50px] flex items-center justify-center"
+            style={{ backgroundColor: '#F9D5AA' }}
           >
             {qrCodeUrl ? (
               <QRCodeComponent 
@@ -864,10 +985,18 @@ function CompletePageContent() {
                 }}
               >
                 <div 
-                  className="text-[95px]  text-[#000000] leading-tight text-center px-10"
-                  style={{ fontFamily: "DNFBitBitv2, monospace" }}
+                  className="text-[95px] text-[#000000] leading-tight text-center px-10 whitespace-pre-line"
+                  style={{ 
+                    fontFamily: "DNFBitBitv2, monospace",
+                    whiteSpace: "pre-wrap"
+                  }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: randomMessage
+                      .replace(/\/n/g, '\n')  // "/n"을 "\n"으로 변환
+                      .split('\n')
+                      .join('<br />') 
+                  }}
                 >
-                  {randomMessage}
                 </div>
               </div>
               
@@ -967,6 +1096,18 @@ function CompletePageContent() {
               </Button>
             </div>
           </>
+        )}
+        
+        {/* 이미지 다운로드 버튼 - 항상 표시 */}
+        {isImageUploadComplete && (
+          <div className="mt-8">
+            <Button
+              onClick={handleDownloadImage}
+              className="w-[752px] h-[281px] text-[120px] text-[#451F0D] bg-[#D4A843] hover:bg-[#C49739] rounded-[60px] font-bold z-20"
+            >
+              이미지 저장
+            </Button>
+          </div>
         )}
       </div>
     </div>
