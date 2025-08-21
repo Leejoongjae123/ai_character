@@ -633,7 +633,7 @@ function CompletePageContent() {
           <style>
             @page {
               /* size: 245px 386px; */
-              size: 250px 398px;
+              size: 245px 398px;
               margin: 0;
               padding: 0;
             }
@@ -662,7 +662,7 @@ function CompletePageContent() {
               
               /* width:245px;
               height:386px; */
-              width: 250px;
+              width: 245px;
               height: 398px;
               margin: 0;
               padding: 0;
