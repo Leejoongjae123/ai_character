@@ -913,7 +913,7 @@ function CompletePageContent() {
 
       <div
         ref={photoCardRef}
-        className="photo-card absolute top-[582px] w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-center bg-[#F9D5AA]"
+        className="photo-card absolute top-[582px] w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-start bg-[#F9D5AA] pt-8"
         style={{ backgroundColor: "#F9D5AA" }}
       >
         <div
