@@ -1028,7 +1028,7 @@ function CompletePageContent() {
             <div className="w-full h-[290px] z-20 bg-[#E4BE50] flex flex-row border-none relative">
               {/* 네임택 위 텍스트 */}
               <div
-                className="absolute w-[814px] h-[298px] z-30 flex flex-col items-center justify-center bg-[#FFE7BB] rounded-[130px] border-[21px] border-black"
+                className="absolute w-[814px] h-[298px] z-30 flex flex-col items-center justify-center bg-[#F7D5AA] rounded-[130px] border-[21px] border-black"
                 style={{
                   top: "-350px",
                   left: "32.5%",
