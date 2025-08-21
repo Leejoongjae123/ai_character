@@ -81,6 +81,26 @@ const composeHangul = (chosung: number, jungsung: number, jongsung: number): str
   return String.fromCharCode(code);
 };
 
+// 글자수에 따라 스페이스를 추가하는 함수
+const formatRoleWithSpaces = (role: string): string => {
+  if (!role) {
+    return role;
+  }
+  
+  const { length } = role;
+  
+  if (length === 2) {
+    // 2글자면 가운데에 스페이스 2개
+    return role[0] + '  ' + role[1];
+  } else if (length === 3) {
+    // 3글자면 각 글자 사이에 스페이스 1개씩
+    return role[0] + ' ' + role[1] + ' ' + role[2];
+  } else {
+    // 4글자 이상이면 스페이스 없음
+    return role;
+  }
+};
+
 // 한글 조합 처리 함수
 const processKoreanInput = (currentText: string, newChar: string): string => {
   if (!currentText) {
@@ -311,13 +331,13 @@ export default function CharacterInteraction({ character, characterId }: Charact
           className="text-[260px] font-bold text-center text-[#481F0E]"
           style={{ fontFamily: "MuseumClassic, serif" }}
         >
-          {character.role}
+          {formatRoleWithSpaces(character.role || '')}
         </div>
         <div
           style={{ whiteSpace: "pre-line", fontFamily: "MuseumClassic, serif" }}
           className="text-[80px] font-bold text-center text-[#481F0E]"
         >
-          {character.description_character_page}
+          {character.description}
         </div>
       </div>
 
@@ -358,7 +378,7 @@ export default function CharacterInteraction({ character, characterId }: Charact
                   캐릭터에 어떤 상황을 설정하고 싶으신가요?
                 </div>
                 <div 
-                  className="text-[79px] font-bold text-center text-[#481F0E]/50"
+                  className="text-[72px] font-bold text-center text-[#481F0E]/50"
                   style={{ letterSpacing: "-0.03em" }}
                 >
                   예: {character?.prompt}
