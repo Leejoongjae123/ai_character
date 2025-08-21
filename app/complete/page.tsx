@@ -731,8 +731,8 @@ function CompletePageContent() {
               }
               
               .print-page {
-                width: 250px !important;
-                height: 398px !important;
+                width: 245px !important;
+                height: 386px !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 page-break-after: always !important;
