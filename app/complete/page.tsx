@@ -632,7 +632,8 @@ function CompletePageContent() {
           <meta charset="utf-8">
           <style>
             @page {
-              size: 245px 386px;
+              /* size: 245px 386px; */
+              size: 250px 398px;
               margin: 0;
               padding: 0;
             }
@@ -658,8 +659,11 @@ function CompletePageContent() {
             }
             
             .print-page {
-              width: 245px;
-              height: 386px;
+              
+              /* width:245px;
+              height:386px; */
+              width: 250px;
+              height: 398px;
               margin: 0;
               padding: 0;
               display: flex;
@@ -670,7 +674,7 @@ function CompletePageContent() {
               box-sizing: border-box;
               position: relative;
               overflow: hidden;
-              background: white;
+              background: transparent;
             }
             
             .print-page:last-child {
@@ -682,7 +686,7 @@ function CompletePageContent() {
               height: 100%;
               margin: 0;
               padding: 0;
-              object-fit: cover;
+              object-fit: contain;
               border: none;
               outline: none;
               display: block;
@@ -727,8 +731,8 @@ function CompletePageContent() {
               }
               
               .print-page {
-                width: 245px !important;
-                height: 386px !important;
+                width: 250px !important;
+                height: 398px !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 page-break-after: always !important;
@@ -747,7 +751,7 @@ function CompletePageContent() {
                 height: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                object-fit: cover !important;
+                object-fit: contain !important;
                 max-width: none !important;
                 max-height: none !important;
               }
@@ -816,7 +820,7 @@ function CompletePageContent() {
                 console.log('모든 이미지 로드 완료, 인쇄 시작');
                 setTimeout(() => {
                   window.print();
-                }, 1000);
+                }, 2000);
               }
             }
             
@@ -836,13 +840,13 @@ function CompletePageContent() {
               }
             });
             
-            // 안전장치: 5초 후에도 인쇄가 시작되지 않으면 강제 실행
+            // 안전장치: 10초 후에도 인쇄가 시작되지 않으면 강제 실행
             setTimeout(() => {
               if (loadedCount < totalImages) {
                 console.log('타임아웃으로 인한 강제 인쇄 실행');
                 window.print();
               }
-            }, 5000);
+            }, 10000);
             
             // 인쇄 창 닫기 이벤트 처리
             window.addEventListener('afterprint', () => {
@@ -909,11 +913,11 @@ function CompletePageContent() {
 
       <div
         ref={photoCardRef}
-        className="photo-card w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-between bg-[#F9D5AA]"
+        className="photo-card absolute top-[582px] w-[1594px] h-[2543px] border-[10px] border-black z-20 rounded-[50px] flex flex-col items-center justify-center bg-[#F9D5AA]"
         style={{ backgroundColor: "#F9D5AA" }}
       >
         <div
-          className="text-[170px] font-bold text-center text-[#481F0E] mt-[60px] role-text relative"
+          className="text-[170px] font-bold text-center text-[#481F0E] role-text relative"
           style={{ fontFamily: "MuseumClassic, serif" }}
         >
           {/* title_deco.png 이미지를 글자 중간에 배치 */}
@@ -1000,7 +1004,7 @@ function CompletePageContent() {
           </div>
 
           <div
-            className="absolute inset-0 border-[21px] border-black thick-container rounded-[60px]"
+            className="absolute inset-0 border-[21px] border-black thick-container rounded-[60px] top-[]"
             style={{
               backgroundImage: `url("/card_bg.png")`,
               backgroundSize: "cover",
@@ -1019,7 +1023,7 @@ function CompletePageContent() {
 
           <div className="relative w-full h-[290px]">
             {/* 검정색 윗 테두리를 가진 겹친 div */}
-            <div className="absolute top-0 left-0 w-full h-[290px] border-[21px] border-black z-25 rounded-bl-[50px] rounded-br-[50px]" />
+            <div className="absolute top-0 left-0 w-full h-[290px] border-[21px] border-black z-25 rounded-bl-[50px] rounded-br-[50px] ability-frame" />
 
             <div className="w-full h-[290px] z-20 bg-[#E4BE50] flex flex-row border-none relative">
               {/* 네임택 위 텍스트 */}
@@ -1048,9 +1052,9 @@ function CompletePageContent() {
               </div>
 
               {/* 통합된 ability 영역 */}
-              <div className="flex-1 flex flex-row border-none relative">
+              <div className="flex-1 flex flex-row border-none relative h-[287.5px]">
                 {/* 왼쪽 ability1 영역 */}
-                <div className="flex-1 flex flex-col border-none pb-3">
+                <div className="flex-1 flex flex-col border-none">
                   {/* 상단 - ability1 */}
                   <div
                     className="flex-1 bg-[#0068B7] flex flex-col items-center justify-center border-none"
@@ -1109,7 +1113,7 @@ function CompletePageContent() {
 
                 {/* 중앙 구분선 - absolute 포지셔닝 */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10">
-                  <div className="w-[21px] bg-black h-[240px] rounded-t-full rounded-b-full"></div>
+                  <div className="w-[21px] bg-black h-[220px] rounded-t-full rounded-b-full"></div>
                 </div>
               </div>
               <div className="w-[460px] "></div>
@@ -1153,9 +1157,9 @@ function CompletePageContent() {
           </>
         )}
 
-        {/* 이미지 다운로드 버튼 - 항상 표시 */}
-        {/* {isImageUploadComplete && (
-          <div className="mt-8">
+        {/* 이미지 다운로드 버튼 - 완료된 경우에만 표시 */}
+        {/* {isImageUploadComplete && !isPrinting && (
+          <div>
             <Button
               onClick={handleDownloadImage}
               className="w-[752px] h-[281px] text-[120px] text-[#451F0D] bg-[#D4A843] hover:bg-[#C49739] rounded-[60px] font-bold z-20"
