@@ -1,10 +1,10 @@
 'use client'
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, memo } from "react";
 import Image from "next/image";
 import { WebcamComponentProps } from "../types";
 
-export const WebcamComponent = ({ onVideoRef }: WebcamComponentProps) => {
+const WebcamComponentInner = ({ onVideoRef }: WebcamComponentProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [error, setError] = useState<string>("");
@@ -130,4 +130,6 @@ export const WebcamComponent = ({ onVideoRef }: WebcamComponentProps) => {
       )}
     </div>
   );
-}; 
+};
+
+export const WebcamComponent = memo(WebcamComponentInner); 

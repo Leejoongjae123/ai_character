@@ -91,7 +91,7 @@ const formatRoleWithSpaces = (role: string): string => {
   
   if (length === 2) {
     // 2글자면 가운데에 스페이스 2개
-    return role[0] + '  ' + role[1];
+    return role[0] + '   ' + role[1];
   } else if (length === 3) {
     // 3글자면 각 글자 사이에 스페이스 1개씩
     return role[0] + ' ' + role[1] + ' ' + role[2];

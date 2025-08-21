@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, use, useRef, useEffect, useState } from "react";
+import { Suspense, use, useRef, useEffect, useState, useCallback } from "react";
 import Loading from "@/app/loading";
 import Lottie from "lottie-react";
 import loaderAnimation from "@/public/loader.json";
@@ -15,6 +15,7 @@ import { WebcamComponent } from "./components/WebcamComponent";
 import { CameraCorners } from "./components/CameraCorners";
 import { ProcessingStatus } from "./components/ProcessingStatus";
 import { FaceGuide } from "./components/FaceGuide";
+import { CountdownOverlay } from "./components/CountdownOverlay";
 import { PageProps, CameraPageContentProps, CameraClientProps } from "./types";
 
 export default function Page({ searchParams }: PageProps) {
@@ -36,7 +37,6 @@ function CameraPageContent({ searchParams }: CameraPageContentProps) {
 function CameraClient({ characterId, situation }: CameraClientProps) {
   const router = useRouter();
   const [isCountingDown, setIsCountingDown] = useState(false);
-  const [countdown, setCountdown] = useState(1);
   const [showWhiteCircle, setShowWhiteCircle] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -59,9 +59,9 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
     };
   }, []);
 
-  const handleVideoRef = (ref: HTMLVideoElement | null) => {
+  const handleVideoRef = useCallback((ref: HTMLVideoElement | null) => {
     videoElementRef.current = ref;
-  };
+  }, []);
 
   const uploadPhotoToSupabase = async (photoBlob: Blob, fileName: string) => {
     try {
@@ -202,7 +202,7 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
     }
   };
 
-  const captureAndUploadPhoto = async () => {
+  const captureAndUploadPhoto = useCallback(async () => {
     if (!videoElementRef.current) {
       return;
     }
@@ -248,9 +248,9 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
       });
       setIsUploading(false);
     }
-  };
+  }, [characterId, situation]);
 
-  const handleTransform = () => {
+  const handleTransform = useCallback(() => {
     playSound();
     
     // 플래시 음향 재생
@@ -278,36 +278,21 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
     // 300ms 후에 카운트다운 시작
     setTimeout(() => {
       setIsCountingDown(true);
-      setCountdown(1);
     }, 300);
-  };
+  }, [playSound]);
 
-  useEffect(() => {
-    if (isCountingDown && countdown <= 3) {
-      if (countdown < 3) {
-        const timer = setTimeout(() => {
-          setCountdown(countdown + 1);
-        }, 1000);
-        return () => clearTimeout(timer);
-      } else if (countdown === 3) {
-        // 카운트다운 3을 충분히 보여준 후 사진 촬영 및 플래시 효과
-        const timer = setTimeout(() => {
-          // 먼저 사진을 캡처하고
-          captureAndUploadPhoto();
-          
-          // 바로 플래시 효과 시작
-          setShowWhiteCircle(true);
-          
-          // 플래시 효과 종료
-          setTimeout(() => {
-            setShowWhiteCircle(false);
-          }, 300);
-        }, 1000);
-        
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isCountingDown, countdown]);
+  const handleCountdownComplete = useCallback(() => {
+    // 카운트다운 완료 후 바로 사진을 캡처하고 플래시 효과 시작
+    captureAndUploadPhoto();
+    
+    setShowWhiteCircle(true);
+    setIsCountingDown(false);
+    
+    // 플래시 효과 종료
+    setTimeout(() => {
+      setShowWhiteCircle(false);
+    }, 300);
+  }, [captureAndUploadPhoto]);
 
   return (
     <div className="w-full h-screen relative flex flex-col items-center justify-between">
@@ -371,13 +356,12 @@ function CameraClient({ characterId, situation }: CameraClientProps) {
 
 
         {/* 카운트다운 */}
-        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-          {isCountingDown && countdown > 0 && countdown <= 3 && !showWhiteCircle && !showLottieLoader && (
-            <div className="text-[400px] font-bold text-white z-40 animate-pulse drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
-              {countdown}
-            </div>
-          )}
-        </div>
+        {!showWhiteCircle && !showLottieLoader && (
+          <CountdownOverlay 
+            isCountingDown={isCountingDown}
+            onCountdownComplete={handleCountdownComplete}
+          />
+        )}
 
         {/* 처리 상태 표시 */}
         <ProcessingStatus 
