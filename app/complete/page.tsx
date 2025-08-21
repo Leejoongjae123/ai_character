@@ -632,7 +632,6 @@ function CompletePageContent() {
           <meta charset="utf-8">
           <style>
             @page {
-              /* size: 245px 386px; */
               size: 245px 386px;
               margin: 0;
               padding: 0;
@@ -659,9 +658,6 @@ function CompletePageContent() {
             }
             
             .print-page {
-              
-              /* width:245px;
-              height:386px; */
               width: 245px;
               height: 386px;
               margin: 0;
@@ -674,7 +670,7 @@ function CompletePageContent() {
               box-sizing: border-box;
               position: relative;
               overflow: hidden;
-              background: transparent;
+              background: white;
             }
             
             .print-page:last-child {
@@ -686,7 +682,7 @@ function CompletePageContent() {
               height: 100%;
               margin: 0;
               padding: 0;
-              object-fit: contain;
+              object-fit: cover;
               border: none;
               outline: none;
               display: block;
@@ -751,7 +747,7 @@ function CompletePageContent() {
                 height: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                object-fit: contain !important;
+                object-fit: cover !important;
                 max-width: none !important;
                 max-height: none !important;
               }
@@ -802,7 +798,7 @@ function CompletePageContent() {
             <!-- 두 번째 페이지 (뒷면) -->
             <div class="print-page">
               <div class="page-info">뒷면 - Page 2</div>
-              <img src="/print_front.jpg" alt="포토카드 뒷면" class="card-image back" crossorigin="anonymous" />
+              <img src="/back.jpg" alt="포토카드 뒷면" class="card-image back" crossorigin="anonymous" />
             </div>
           </div>
           
@@ -820,7 +816,7 @@ function CompletePageContent() {
                 console.log('모든 이미지 로드 완료, 인쇄 시작');
                 setTimeout(() => {
                   window.print();
-                }, 2000);
+                }, 1000);
               }
             }
             
@@ -840,13 +836,13 @@ function CompletePageContent() {
               }
             });
             
-            // 안전장치: 10초 후에도 인쇄가 시작되지 않으면 강제 실행
+            // 안전장치: 5초 후에도 인쇄가 시작되지 않으면 강제 실행
             setTimeout(() => {
               if (loadedCount < totalImages) {
                 console.log('타임아웃으로 인한 강제 인쇄 실행');
                 window.print();
               }
-            }, 10000);
+            }, 5000);
             
             // 인쇄 창 닫기 이벤트 처리
             window.addEventListener('afterprint', () => {
