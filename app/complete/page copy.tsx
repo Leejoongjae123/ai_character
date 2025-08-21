@@ -918,7 +918,7 @@ function CompletePageContent() {
                   
                   {/* 하단 - skill1Value */}
                   <div
-                    className="flex-1 bg-[#BAE3F9] flex flex-col items-center justify-center border-none"
+                    className="flex-1 bg-[#BAE3F9] flex flex-col items-center justify-center border-none pb-3"
                     style={{ fontFamily: "DNFBitBitv2, monospace" }}
                   >
                     <p style={{ fontFamily: "DNFBitBitv2, monospace" }} className="text-[100px] text-black leading-none border-none">
@@ -941,7 +941,7 @@ function CompletePageContent() {
                   
                   {/* 하단 - skill2Value */}
                   <div
-                    className="flex-1 bg-[#BAE3F9] flex flex-col items-center justify-center border-none"
+                    className="flex-1 bg-[#BAE3F9] flex flex-col items-center justify-center border-none pb-3"
                     style={{ fontFamily: "DNFBitBitv2, monospace" }}
                   >
                     <p style={{ fontFamily: "DNFBitBitv2, monospace" }} className="text-[100px] text-black leading-none border-none">

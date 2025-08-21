@@ -832,8 +832,8 @@ function CompletePageContent() {
       // 2글자는 3칸 스페이스로 띄우기
       return role.split('').join('   ');
     } else if (role.length === 3) {
-      // 3글자는 2칸 스페이스로 띄우기
-      return role.split('').join('  ');
+      // 3글자는 1칸 스페이스로 띄우기
+      return role.split('').join(' ');
     }
     // 그 외는 그대로
     return role;
@@ -907,7 +907,7 @@ function CompletePageContent() {
         </div>
         
         <div 
-          className="w-[1368px] h-[2070px] border-[10px] border-black z-20 rounded-[50px] mb-[100px] relative overflow-hidden flex flex-col items-center justify-end"
+          className="w-[1368px] h-[2070px] z-20 rounded-[50px] mb-[100px] relative overflow-hidden flex flex-col items-center justify-end"
         >
           {/* 별 표시 영역 - QR 코드 위쪽에 세로로 배치 */}
           {character?.star_count && character.star_count > 0 && (
@@ -932,7 +932,7 @@ function CompletePageContent() {
           )}
           
           <div 
-            className="qrcode absolute bottom-0 right-0 w-[460px] h-[460px] bg-[#F9D5AA] z-30 border-[21px] border-black rounded-tl-[50px] flex items-center justify-center"
+            className="qrcode absolute bottom-0 right-0 w-[460px] h-[460px] bg-[#F9D5AA] z-30 border-[21px] border-black rounded-tl-[50px] rounded-br-[50px] flex items-center justify-center "
             style={{ backgroundColor: '#F9D5AA' }}
           >
             {qrCodeUrl ? (
@@ -950,7 +950,7 @@ function CompletePageContent() {
           </div>
           
           <div
-            className="absolute inset-0 border-[21px] border-black"
+            className="absolute inset-0 border-[21px] border-black thick-container rounded-[60px]"
             style={{
               backgroundImage: `url("/card_bg.png")`,
               backgroundSize: 'cover',
@@ -968,7 +968,7 @@ function CompletePageContent() {
           <div className="relative w-full h-[290px]">
             {/* 검정색 윗 테두리를 가진 겹친 div */}
             <div 
-              className="absolute top-0 left-0 w-full h-[290px] border-[21px] border-black z-25"
+              className="absolute top-0 left-0 w-full h-[290px] border-[21px] border-black z-25 rounded-bl-[50px] rounded-br-[50px]"
             />
 
             <div 
@@ -1005,7 +1005,7 @@ function CompletePageContent() {
               {/* 통합된 ability 영역 */}
               <div className="flex-1 flex flex-row border-none relative">
                 {/* 왼쪽 ability1 영역 */}
-                <div className="flex-1 flex flex-col border-none">
+                <div className="flex-1 flex flex-col border-none pb-3">
                   {/* 상단 - ability1 */}
                   <div
                     className="flex-1 bg-[#0068B7] flex flex-col items-center justify-center border-none"
@@ -1052,7 +1052,7 @@ function CompletePageContent() {
 
                 {/* 중앙 구분선 - absolute 포지셔닝 */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10"> 
-                  <div className="w-[21px] bg-black h-[240px]"></div>
+                  <div className="w-[21px] bg-black h-[240px] rounded-t-full rounded-b-full"></div>
                 </div>
               </div>
               <div className="w-[460px] "></div>
