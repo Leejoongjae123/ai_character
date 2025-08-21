@@ -199,17 +199,18 @@ export default function CharacterInteraction({ character, characterId }: Charact
     isRecording, 
     transcript, 
     isProcessing, 
+    timeLeft,
     toggleRecording,
     setTranscript
   } = useVoiceRecognition();
 
-  // 음성 인식 결과를 상황 설명으로 설정
+  // 음성 인식 결과를 상황 설명으로 설정 (녹음이 끝났을 때만)
   useEffect(() => {
-    if (transcript) {
+    if (transcript && !isRecording) {
       setSituation(transcript);
       setShowPromptContent(true);
     }
-  }, [transcript]);
+  }, [transcript, isRecording]);
 
   // 음성 인식 상태에 따라 배경 음악 음소거 처리
   useEffect(() => {
@@ -246,9 +247,7 @@ export default function CharacterInteraction({ character, characterId }: Charact
         title: "녹음 중지",
         description: "음성 인식을 중지했습니다.",
       });
-      if (situation) {
-        setShowPromptContent(true);
-      }
+      // 녹음이 완전히 중지되면 useEffect에서 자동으로 처리됨
     }
   };
 
@@ -336,7 +335,22 @@ export default function CharacterInteraction({ character, characterId }: Charact
 
       {/* 상황 입력 프롬프트 */}
       <div className="prompt flex flex-col items-center justify-center z-30 border-[25px] border-[#D3B582] rounded-[60px] w-[1666px] h-[390px] relative">
-        {showPromptContent ? (
+        {isRecording ? (
+          <div className="flex flex-col items-center justify-center w-full h-full gap-8">
+            
+            <div className="flex flex-col items-center gap-4">
+            {transcript && (
+                                <div className="text-[79px] font-bold text-center text-[#481F0E]">
+                                {transcript}
+                              </div>
+              )}
+              <div className="text-[48px] font-bold text-[#481F0E]/70">
+                남은 시간: {timeLeft}초
+              </div>
+            
+            </div>
+          </div>
+        ) : showPromptContent ? (
           <>
             {!situation ? (
               <>
@@ -362,7 +376,7 @@ export default function CharacterInteraction({ character, characterId }: Charact
             )}
           </>
         ) : (
-          <div className="flex items-center justify-center w-full h-full">
+          <div className="flex flex-col items-center justify-center w-full h-full gap-8">
             <Loader2 className="w-40 h-40 animate-spin text-[#481F0E]" />
           </div>
         )}
